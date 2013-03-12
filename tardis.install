@@ -1,0 +1,34 @@
+<?php
+
+/**
+ * Implements hook_enable(). 
+ *
+ * Gives anonymous users access to the TARDIS. 
+ */
+function tardis_enable() {
+  user_role_change_permissions(
+    DRUPAL_ANONYMOUS_RID, array('view TARDIS page' => TRUE)
+  );
+  user_role_change_permissions(
+    DRUPAL_AUTHENTICATED_RID, array('view TARDIS page' => TRUE)
+  );
+}
+
+/**
+ * Implements hook_uninstall(). 
+ */
+function tardis_uninstall() {
+  variable_del('tardis_page_title');
+  variable_del('tardis_page_title_date');
+  variable_del('tardis_page_address');
+  variable_del('tardis_page_node_types');
+  variable_del('tardis_page_nodes_per_page');
+
+  variable_del('tardis_block_title');
+  variable_del('tardis_block_past_months');
+  variable_del('tardis_block_stop_year');
+  variable_del('tardis_block_link_nesting_months_years');
+  variable_del('tardis_block_year_link');
+  variable_del('tardis_block_month_link');
+  variable_del('tardis_block_custom_link');
+}
