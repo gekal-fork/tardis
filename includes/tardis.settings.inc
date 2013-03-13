@@ -40,7 +40,7 @@ function tardis_block_settings($form, &$form_state) {
     '#default_value' => variable_get('tardis_block_past_months', 12),
   );
 
-  // Define a certain point beyond which the TARDIS shouldn't look. 
+  // Define a certain point beyond which the TARDIS shouldn't look.
   $form['tardis_block_stop_year'] = array(
     '#type' => 'textfield',
     '#size' => 4,
@@ -51,7 +51,7 @@ function tardis_block_settings($form, &$form_state) {
     '#default_value' => variable_get('tardis_block_stop_year', 2001),
   );
 
-  // Option to nest months within years. 
+  // Option to nest months within years.
   $form['tardis_block_link_nesting_months_years'] = array(
     '#type' => 'checkbox',
     '#title' => t('Month link nesting'),
@@ -59,7 +59,7 @@ function tardis_block_settings($form, &$form_state) {
     '#default_value' => variable_get('tardis_block_link_nesting_months_years', TRUE),
   );
 
-  // Lets users choose how year links will be styled. 
+  // Lets users choose how year links will be styled.
   $form['tardis_block_year_link'] = array(
     '#type' => 'radios',
     '#title' => t('Year link style'),
@@ -83,7 +83,7 @@ function tardis_block_settings($form, &$form_state) {
     ),
   );
 
-  // Lets users choose how month links will be styled. 
+  // Lets users choose how month links will be styled.
   $form['tardis_block_month_link'] = array(
     '#type' => 'radios',
     '#title' => t('Month link style'),
@@ -95,7 +95,7 @@ function tardis_block_settings($form, &$form_state) {
     '#default_value' => variable_get('tardis_block_month_link', 'names'),
   );
 
-  // Allows users to override the standard TARDIS link 
+  // Allows users to override the standard TARDIS link.
   $form['tardis_block_custom_link'] = array(
     '#type' => 'textfield',
     '#title' => t('Custom link'),
@@ -108,14 +108,14 @@ function tardis_block_settings($form, &$form_state) {
 
   $form['#validate'][] = 'tardis_block_settings_validate';
 
-  return(system_settings_form($form));
+  return (system_settings_form($form));
 }
 
 /**
  * System settings form for the TARDIS page of recently added nodes. 
  */
 function tardis_page_settings($form, &$form_state) {
-  // Page title
+  // Page title.
   $form['tardis_page_title'] = array(
     '#type' => 'textfield',
     '#title' => t('TARDIS page title'),
@@ -124,7 +124,7 @@ function tardis_page_settings($form, &$form_state) {
     '#default_value' => variable_get('tardis_page_title', 'Recent nodes'),
   );
 
-  // Option to append a date to the page title
+  // Option to append a date to the page title.
   $form['tardis_page_title_date'] = array(
     '#type' => 'radios',
     '#title' => t('Append date to page title'),
@@ -148,14 +148,14 @@ function tardis_page_settings($form, &$form_state) {
     '#default_value' => variable_get('tardis_page_address', 'recent/nodes'),
   );
 
-  // Get all available node types and build an associative array 
-  // with the format machine_name => 'human-readable name' 
+  // Get all available node types and build an associative array
+  // with the format machine_name => 'human-readable name'
   $node_types = node_type_get_types();
   foreach ($node_types as $node_type) {
-      $options[$node_type->type] = $node_type->name;
+    $options[$node_type->type] = $node_type->name;
   }
-  // Now ask site admins which nodes they want displayed in the TARDIS
-  // page and block 
+  // Now ask site admins which nodes they want displayed
+  // on the TARDIS page and block.
   $form['tardis_page_node_types'] = array(
     '#type' => 'checkboxes',
     '#title' => t('Node types'),
@@ -176,27 +176,33 @@ function tardis_page_settings($form, &$form_state) {
 
   $form['#validate'][] = 'tardis_page_settings_validate';
 
-  return(system_settings_form($form));
+  return (system_settings_form($form));
 }
 
+/**
+ * Validates input for the TARDIS block settings.
+ */
 function tardis_block_settings_validate($form, &$form_state) {
-  // Define the validation strings. 
+  // Define the validation strings.
   $tardis_block_stop_year = $form_state['values']['tardis_block_stop_year'];
   $tardis_block_past_months = $form_state['values']['tardis_block_past_months'];
 
-  // The "Stop looking at the year" field should obviously be a year. 
+  // The "Stop looking at the year" field should obviously be a year.
   if (!preg_match('/^[0-9]{4}$/', $tardis_block_stop_year)) {
-    form_set_error ('tardis_block_stop_year', 'Please input a valid year with four digits.');
+    form_set_error('tardis_block_stop_year', 'Please input a valid year with four digits.');
   }
 
-  // And the "How far back?" one should be a two-digit number. 
+  // And the "How far back?" one should be a two-digit number.
   if (!preg_match('/^[0-9]{2}$/', $tardis_block_past_months) || $tardis_block_past_months <= 1) {
-    form_set_error ('tardis_block_past_months', 'Please input a valid number of months between 1 and 99.');
+    form_set_error('tardis_block_past_months', 'Please input a valid number of months between 1 and 99.');
   }
 }
 
+/**
+ * Validates input for the TARDIS page settings.
+ */
 function tardis_page_settings_validate($form, &$form_state) {
-  // Define the validation strings. 
+  // Define the validation strings.
   $tardis_page_address = $form_state['values']['tardis_page_address'];
   $tardis_page_title = $form_state['values']['tardis_page_title'];
   $tardis_page_nodes_per_page = $form_state['values']['tardis_page_nodes_per_page'];
@@ -206,8 +212,8 @@ function tardis_page_settings_validate($form, &$form_state) {
     drupal_set_message(t("Don't forget to <a href='/admin/config/development/performance'>clear your cache.</a>"));
   }
 
-  // The "Nodes per page" field should be a two-digit number. 
+  // The "Nodes per page" field should be a two-digit number.
   if (!preg_match('/^[0-9]{2}$/', $tardis_page_nodes_per_page) || $tardis_page_nodes_per_page <= 1) {
-    form_set_error ('tardis_page_nodes_per_page', 'Please input a valid number of nodes per page between 1 and 99.');
+    form_set_error('tardis_page_nodes_per_page', 'Please input a valid number of nodes per page between 1 and 99.');
   }
 }
