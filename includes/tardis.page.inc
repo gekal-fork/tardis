@@ -3,7 +3,6 @@
 /**
  * @file
  * Page include file which renders the TARDIS list of recent nodes.
- *
  */
 
 /**

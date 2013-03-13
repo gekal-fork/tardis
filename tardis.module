@@ -156,7 +156,7 @@ function tardis_block_view($delta = '') {
             }
           }
         }
-      } 
+      }
       else {
         // Or else, months are nested as sublists of each year item.
         foreach ($information as $item) {
@@ -183,23 +183,21 @@ function tardis_block_view($delta = '') {
           // which year the user is currently viewing.
           // First off, this function returns the arguments from the URL.
           $tardis_query_arg = _tardis_query_arg();
-    
+
           // Now we'll attach some handy javascript.
           $block['content']['#attached']['js'][] = array(
-            'data' => '(function($)
-                {$(function(){
-                  $("#tardis-accordion .tardis-link-year>*>a")
-                    .attr("href", "javascript:void(0);");
-                  $("#tardis-accordion .tardis-year-' . $tardis_query_arg[0] . '>.item-list").addClass("active");
-                  $("#tardis-accordion *>.item-list:not(.active)").hide();
-                  $("#tardis-accordion .tardis-link-year")
-                    .click(function(){
-                      $(this).siblings().children(".item-list").hide();
-                      $(this).children(".item-list").addClass("active");
-                      $(this).children(".item-list.active").show();
-                    });
-                })}
-            )(jQuery);',
+            'data' => '(function($){$(function(){
+                        $("#tardis-accordion .tardis-link-year>*>a")
+                          .attr("href", "javascript:void(0);");
+                        $("#tardis-accordion .tardis-year-' . $tardis_query_arg[0] . '>.item-list").addClass("active");
+                        $("#tardis-accordion *>.item-list:not(.active)").hide();
+                        $("#tardis-accordion .tardis-link-year")
+                          .click(function(){
+                            $(this).siblings().children(".item-list").hide();
+                            $(this).children(".item-list").addClass("active");
+                            $(this).children(".item-list.active").show();
+                          });
+                      })})(jQuery);',
             'type' => 'inline',
           );
         }
@@ -281,7 +279,7 @@ function _tardis_query_block() {
     // the link for the past month.
     // If we're in January, then we'll display December from the previous year.
     if (count($result) > 0) {
-      // Did users set the block years to render without links? 
+      // Did users set the block years to render without links?
       $tardis_block_year_link = variable_get('tardis_block_year_link', 'normal');
       if ($tardis_block_year_link == 'no_link') {
         $tardis_block_year_link_target = NULL;
@@ -331,7 +329,7 @@ function _tardis_query_block() {
         'class' => array(
           'tardis-link-month',
           "tardis-year-$tardis_past_year",
-          "tardis-month-$tardis_past_month"
+          "tardis-month-$tardis_past_month",
         ),
       );
 
@@ -343,7 +341,7 @@ function _tardis_query_block() {
     $tardis_past_month--;
 
     // If we're in January, then the next step is December, last year.
-    // And we'll show that year. 
+    // And we'll show that year.
     if ($tardis_past_month == 0) {
       $tardis_past_month = 12;
       $tardis_past_year--;
