@@ -1,6 +1,9 @@
 <?php
 
 /**
+ * @file
+ * Theme file.
+ *
  * Template for rendering month links in the TARDIS block.
  */
 

@@ -1,6 +1,12 @@
 <?php
 
 /**
+ * @file
+ * Page include file which renders the TARDIS list of recent nodes.
+ *
+ */
+
+/**
  * This function builds the page.
  *
  * @return array
@@ -25,7 +31,7 @@ function tardis_page() {
         // Month names:
         case 'years_month_names':
           // Retrieve month names using this helper function.
-          $tardis_month_names = _tardis_month_names(); 
+          $tardis_month_names = _tardis_month_names();
           $tardis_month_number = $tardis_query_arg[1];
           drupal_set_title($title . ": $tardis_month_names[$tardis_month_number], $tardis_query_arg[0]");
           break;

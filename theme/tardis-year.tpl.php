@@ -1,6 +1,9 @@
 <?php 
 
 /**
+ * @file
+ * Theme file.
+ *
  * Template for rendering year links in the TARDIS block.
  * If there's no link, it's rendered as plain text.
  */

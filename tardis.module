@@ -1,6 +1,14 @@
 <?php
 
 /**
+ * @file
+ * Main module file.
+ *
+ * Instantiates the TARDIS block, menu items, theme
+ * and a couple of helper functions.
+ */
+
+/**
  * Implements hook_menu(). 
  */
 function tardis_menu() {

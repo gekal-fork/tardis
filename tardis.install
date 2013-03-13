@@ -1,6 +1,16 @@
 <?php
 
 /**
+ * @file
+ * Install file.
+ *
+ * Automatically enables the permission to access the TARDIS
+ * by anonymous and authenticated users.
+ *
+ * Also deletes variables during uninstall.
+ */
+
+/**
  * Implements hook_enable(). 
  *
  * Gives anonymous users access to the TARDIS. 

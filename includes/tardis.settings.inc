@@ -1,6 +1,13 @@
 <?php
 
 /**
+ * @file
+ * Settings include file.
+ *
+ * Has two tabs for setting up TARDIS block and page options.
+ */
+
+/**
  * Main page for the TARDIS settings. 
  */
 function tardis_settings() {
