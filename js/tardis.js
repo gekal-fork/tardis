@@ -1,5 +1,8 @@
-// The following javascript adds accordion-style functionality
-// to years and months.
+/**
+ * @file
+ * This javascript adds accordion-style functionality to years and months.
+ */
+
 (function($){
   $(function(){
     // The variable "year" takes the argument YYYY from the URL

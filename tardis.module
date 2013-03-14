@@ -187,7 +187,7 @@ function tardis_block_view($delta = '') {
           // Now we'll attach some handy javascript. The following command
           // passes the variable retrieved from the query to the external
           // JS file.
-          drupal_add_js(array('tardis' => array('year' => $tardis_query_arg[0],)),'setting');
+          drupal_add_js(array('tardis' => array('year' => $tardis_query_arg[0])), 'setting');
           $block['content']['#attached']['js'][] = array(
             'data' => drupal_get_path('module', 'tardis') . '/js/tardis.js',
             'scope' => 'header',
