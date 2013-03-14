@@ -43,7 +43,7 @@ function tardis_page() {
     }
 
     // If there's only a year, that distinction is not needed.
-    if (count($tardis_query_arg) < 2) {
+    if (count($tardis_query_arg) == 1 && $tardis_query_arg[0] != '') {
       drupal_set_title($title . ": $tardis_query_arg[0]");
     }
   }
@@ -125,7 +125,7 @@ function _tardis_query_page() {
   }
 
   // Or just a year?
-  if (count($tardis_query_arg) < 2) {
+  if (count($tardis_query_arg) < 2 && $tardis_query_arg[0] != '') {
     $tardis_query_year = $tardis_query_arg[0];
 
     // Define the first day of the year and the next as limits.
