@@ -188,7 +188,6 @@ function tardis_block_view($delta = '') {
           // the node's created year as argument for the TARDIS block.
           if (!isset($tardis_query_arg[0])) {
             $node = node_load(arg(1));
-          //  dsm($node);
             $tardis_query_year = date('Y', $node->created);
           }
           else {
