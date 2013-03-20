@@ -18,7 +18,8 @@ function tardis_menu() {
   $items['admin/structure/tardis'] = array(
     'title' => 'TARDIS settings',
     'description' => 'Customise your TARDIS page and block.',
-    'page callback' => 'tardis_settings',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('tardis_general_settings'),
     'access arguments' => array('administer site configuration'),
     'file' => 'includes/tardis.settings.inc',
   );
@@ -231,36 +232,61 @@ function _tardis_query_block() {
   $list = array();
 
   // First we get the current month and year.
+  $tardis_tomorrow = date('d', strtotime('+1 day'));
   $tardis_this_month = date('m', time());
   $tardis_this_year = date('Y', time());
 
   // And we define the current year and past month as the starting point.
   $tardis_past_year = $tardis_this_year;
-  $tardis_past_month = $tardis_this_month - 1;
+  $tardis_past_month = $tardis_this_month;
 
   // Then how many months to go back in time.
   $tardis_block_past_months = variable_get('tardis_block_past_months', 12);
 
   // We also restrict our search to the selected node types.
-  $tardis_page_node_types = variable_get('tardis_page_node_types', array('page'));
+  $tardis_general_node_types = variable_get('tardis_general_node_types', array('page'));
 
-  // And establish a point beyond which the TARDIS
-  // shouldn't go, for performance reasons.
+  // And establish a point in time beyond which the TARDIS shouldn't go,
+  // for performance reasons.
   $tardis_block_stop_year = variable_get('tardis_block_stop_year', 2001);
 
   // By default, we show the year along with the first month in the list.
   $tardis_show_year = 1;
 
-  // Then recursively go back one month at a time and check
-  // if there is at least one node there.
-  // Unless we've hit the last year we're supposed to look.
+  // Then recursively go back one month at a time and check if there is
+  // at least one node there - unless we've hit the last year we're
+  // supposed to look into.
+  // If users specify the current month as part of the TARDIS block, the list
+  // begins with the current day and month.
+  $tardis_general_current_month = variable_get('tardis_general_current_month', 0);
   while ($tardis_block_past_months > 0 && $tardis_past_year >= $tardis_block_stop_year) {
-    // This is the interval in which we'll investigate.
-    $tardis_query_date_max = $tardis_this_year . '-' . $tardis_this_month . '-01';
-    $tardis_query_date_min = $tardis_past_year . '-' . $tardis_past_month . '-01';
+    // If we're in December, then the next step is November, last year.
+    if ($tardis_this_month == 0) {
+      $tardis_this_month = 12;
+      $tardis_this_year--;
+    }
 
-    // For displaying purposes, we pad the month with a leading zero.
-    $tardis_past_month = sprintf('%02d', $tardis_past_month);
+    // If we're on the current month, TARDIS queries the DB looking for nodes
+    // from the first day of the month up until today.
+    // If we're on the previous month, or if users choose not to display the
+    // current month, TARDIS creates a a one-month period for the queries.
+    ($tardis_general_current_month == 0) ? $tardis_past_month = $tardis_this_month - 1 : '';
+
+    // If we're in January, then the next step is December, last year.
+    if ($tardis_past_month == 0) {
+      $tardis_past_month = 12;
+      $tardis_past_year--;
+      $tardis_show_year = 1;
+    }
+
+    // This is the interval in which we'll investigate.
+    if ($tardis_general_current_month == 1) {
+      $tardis_query_date_max = $tardis_this_year . '-' . $tardis_this_month . '-' . $tardis_tomorrow;
+      $tardis_query_date_min = $tardis_past_year . '-' . $tardis_this_month . '-01';
+    } else {
+      $tardis_query_date_max = $tardis_this_year . '-' . $tardis_this_month . '-01';
+      $tardis_query_date_min = $tardis_past_year . '-' . $tardis_past_month . '-01';
+    }
 
     // And we query the db once for each node we find in each month,
     // going one month further back with each iteration.
@@ -272,7 +298,7 @@ function _tardis_query_block() {
         'created',
       ))
       ->addTag('node_access')
-      ->condition('type', $tardis_page_node_types)
+      ->condition('type', $tardis_general_node_types)
       ->range(0, 1)
       ->condition('created', array(strtotime($tardis_query_date_min), strtotime($tardis_query_date_max)), 'BETWEEN');
     $result = $query->execute()->fetchAllAssoc('nid');
@@ -298,13 +324,17 @@ function _tardis_query_block() {
           // Those classes will help style links if needed.
           'class' => array('tardis-link-year', "tardis-year-$tardis_past_year"),
         );
-        // Each time we show the year, we mark it so that it's
-        // not shown again until it reaches December.
+        // Each time we show the year, we mark it so that it's not shown again
+        // until it reaches December on another iteration.
         $tardis_show_year = 0;
       }
 
+      // For displaying purposes, we pad the month with a leading zero.
+      $tardis_past_month = sprintf('%02d', $tardis_past_month);
+
       // Did the user set months to render as names or numbers?
       $tardis_block_month_link = variable_get('tardis_block_month_link', 'names');
+
       if ($tardis_block_month_link == 'names') {
         // This helper funtion retrieves month names.
         $tardis_month_names = _tardis_month_names();
@@ -338,22 +368,12 @@ function _tardis_query_block() {
       $tardis_block_past_months--;
     }
 
-    // Now we step back one month in time.
-    $tardis_this_month--;
-    $tardis_past_month--;
-
-    // If we're in January, then the next step is December, last year.
-    // And we'll show that year.
-    if ($tardis_past_month == 0) {
-      $tardis_past_month = 12;
-      $tardis_past_year--;
-      $tardis_show_year = 1;
-    }
-
-    // If we're in December, then the next point is November, last year.
-    if ($tardis_this_month == 0) {
-      $tardis_this_month = 12;
-      $tardis_this_year--;
+    // Finally, we step back one month in time.
+    if ($tardis_general_current_month == 1) {
+      $tardis_general_current_month = 0;
+    } else {
+      $tardis_this_month--;
+      $tardis_past_month--;
     }
   }
 
@@ -364,8 +384,8 @@ function _tardis_query_block() {
  * Function that takes the arguments from the URL in an orderly fashion.
  */
 function _tardis_query_arg() {
-  $q = $_GET['q'];
-  $q = explode('/', $q);
+  // arg() returns arguments from the URL.
+  $q = arg();
 
   // By default, this function returns an empty array
   // if no month or year arguments are supplied.

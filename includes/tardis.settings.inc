@@ -10,19 +10,48 @@
 /**
  * Main page for the TARDIS settings. 
  */
-function tardis_settings() {
+function tardis_general_settings($form, &$form_state) {
+  // Build a quick list of links to the block and page settings.
   $tardis_admin_items = array(
-    t('<a href="@url">TARDIS page settings</a><br />Settings for the TARDIS page', array('@url' => url('admin/structure/tardis/page'))),
     t('<a href="@url">TARDIS block settings</a><br />Settings for the TARDIS block', array('@url' => url('admin/structure/tardis/block'))),
+    t('<a href="@url">TARDIS page settings</a><br />Settings for the TARDIS page', array('@url' => url('admin/structure/tardis/page'))),
   );
-
-  $content['tardis_settings'] = array(
+  // Group and display it.
+  $form['tardis_specific_settings'] = array(
+    '#type' => 'fieldset',
+    '#title' => 'TARDIS specific settings',
+  );
+  $form['tardis_specific_settings']['tardis_general_links'] = array(
     '#theme' => 'item_list',
     '#type' => 'ul',
     '#items' => $tardis_admin_items,
   );
 
-  return render($content);
+  // Should the TARDIS include the current month?
+  $form['tardis_general_current_month'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Include the current month'),
+    '#description' => t('Check this box to have the TARDIS display the current month.'),
+    '#default_value' => variable_get('tardis_general_current_month', 0),
+  );
+
+  // Get all available node types and build an associative array
+  // with the format machine_name => 'human-readable name'
+  $node_types = node_type_get_types();
+  foreach ($node_types as $node_type) {
+    $options[$node_type->type] = $node_type->name;
+  }
+  // Now ask site admins which nodes they want displayed
+  // on the TARDIS page and block.
+  $form['tardis_general_node_types'] = array(
+    '#type' => 'checkboxes',
+    '#title' => t('Node types'),
+    '#description' => t('Which node types would you like displayed?'),
+    '#options' => $options,
+    '#default_value' => variable_get('tardis_general_node_types', array('page')),
+  );
+
+  return (system_settings_form($form));
 }
 
 /**
@@ -153,22 +182,6 @@ function tardis_page_settings($form, &$form_state) {
       No beginning or trailing slashes, please. <br />
       <em>Please note: </em>changing this setting requires that you clear your cache.'),
     '#default_value' => variable_get('tardis_page_address', 'recent/nodes'),
-  );
-
-  // Get all available node types and build an associative array
-  // with the format machine_name => 'human-readable name'
-  $node_types = node_type_get_types();
-  foreach ($node_types as $node_type) {
-    $options[$node_type->type] = $node_type->name;
-  }
-  // Now ask site admins which nodes they want displayed
-  // on the TARDIS page and block.
-  $form['tardis_page_node_types'] = array(
-    '#type' => 'checkboxes',
-    '#title' => t('Node types'),
-    '#description' => t('Which node types would you like displayed?'),
-    '#options' => $options,
-    '#default_value' => variable_get('tardis_page_node_types', array('page')),
   );
 
   $form['tardis_page_nodes_per_page'] = array(

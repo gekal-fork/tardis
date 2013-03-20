@@ -28,11 +28,8 @@ function tardis_enable() {
  * Implements hook_uninstall(). 
  */
 function tardis_uninstall() {
-  variable_del('tardis_page_title');
-  variable_del('tardis_page_title_date');
-  variable_del('tardis_page_address');
-  variable_del('tardis_page_node_types');
-  variable_del('tardis_page_nodes_per_page');
+  variable_del('tardis_general_current_month');
+  variable_del('tardis_general_node_types');
 
   variable_del('tardis_block_title');
   variable_del('tardis_block_past_months');
@@ -41,4 +38,9 @@ function tardis_uninstall() {
   variable_del('tardis_block_year_link');
   variable_del('tardis_block_month_link');
   variable_del('tardis_block_custom_link');
+
+  variable_del('tardis_page_title');
+  variable_del('tardis_page_title_date');
+  variable_del('tardis_page_address');
+  variable_del('tardis_page_nodes_per_page');
 }

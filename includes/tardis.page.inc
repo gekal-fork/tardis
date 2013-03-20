@@ -86,7 +86,7 @@ function _tardis_query_page() {
   $tardis_page_nodes_per_page = variable_get('tardis_page_nodes_per_page', 10);
 
   // Then it takes the node types that were chosen to be displayed:
-  $tardis_page_node_types = variable_get('tardis_page_node_types', array('page'));
+  $tardis_general_node_types = variable_get('tardis_general_node_types', array('page'));
 
   // The query also limits nodes by access permission,
   // so if users have no permissions for certain node types,
@@ -99,7 +99,7 @@ function _tardis_query_page() {
     ))
     ->addTag('node_access')
     ->extend('PagerDefault')
-    ->condition('type', $tardis_page_node_types)
+    ->condition('type', $tardis_general_node_types)
     ->limit($tardis_page_nodes_per_page)
     ->orderBy('created', 'DESC');
 
