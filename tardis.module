@@ -49,10 +49,12 @@ function tardis_menu() {
   // TARDIS page callback.
   $tardis_page_address = variable_get('tardis_page_address', 'recent/nodes');
   // The page title must be run through filter_xss() in order to avoid
-  // any malicious scripts.
-  $tardis_page_title = filter_xss(variable_get('tardis_page_title', 'Recent nodes'));
+  // any malicious scripts. So we change the title callback, which is usually
+  // t().
+  $tardis_page_title = variable_get('tardis_page_title', 'Recent nodes');
   $items[$tardis_page_address] = array(
     'title' => $tardis_page_title,
+    'title callback' => 'filter_xss',
     'description' => 'View past nodes',
     'page callback' => 'tardis_page',
     'access arguments' => array('view TARDIS page'),
@@ -283,7 +285,8 @@ function _tardis_query_block() {
     if ($tardis_general_current_month == 1) {
       $tardis_query_date_max = $tardis_this_year . '-' . $tardis_this_month . '-' . $tardis_tomorrow;
       $tardis_query_date_min = $tardis_past_year . '-' . $tardis_this_month . '-01';
-    } else {
+    }
+    else {
       $tardis_query_date_max = $tardis_this_year . '-' . $tardis_this_month . '-01';
       $tardis_query_date_min = $tardis_past_year . '-' . $tardis_past_month . '-01';
     }
@@ -307,13 +310,17 @@ function _tardis_query_block() {
     // the link for the past month.
     // If we're in January, then we'll display December from the previous year.
     if (count($result) > 0) {
+      // In case users set a custom link, here it is:
+      $tardis_block_custom_link = variable_get('tardis_block_custom_link', '');
+      $tardis_page_address = ($tardis_block_custom_link == '') ? variable_get('tardis_page_address', 'recent/nodes') : $tardis_block_custom_link;
+
       // Did users set the block years to render without links?
       $tardis_block_year_link = variable_get('tardis_block_year_link', 'normal');
       if ($tardis_block_year_link == 'no_link') {
         $tardis_block_year_link_target = NULL;
       }
       else {
-        $tardis_block_year_link_target = variable_get('tardis_page_address', 'recent/nodes') . '/' . $tardis_past_year;
+        $tardis_block_year_link_target = $tardis_page_address . '/' . $tardis_past_year;
       }
 
       // And we add the year the first time.
@@ -349,11 +356,8 @@ function _tardis_query_block() {
         $tardis_this_year--;
       }
 
-      // Custom link address?
-      $tardis_block_custom_link = variable_get('tardis_block_custom_link', '');
-      $tardis_page_address = ($tardis_block_custom_link == '') ? variable_get('tardis_page_address', 'recent/nodes') : $tardis_block_custom_link;
-
-      // Now we add a month.
+      // Now we add a month. Just like with the year link, the month link
+      // can be customised in settings.
       $list[count($list) - 1]['children'][] = array(
         'title' => $tardis_past_month_title,
         'link' => $tardis_page_address . '/' . $tardis_past_year . '/' . $tardis_past_month,
@@ -371,7 +375,8 @@ function _tardis_query_block() {
     // Finally, we step back one month in time.
     if ($tardis_general_current_month == 1) {
       $tardis_general_current_month = 0;
-    } else {
+    }
+    else {
       $tardis_this_month--;
       $tardis_past_month--;
     }
