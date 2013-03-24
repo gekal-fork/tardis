@@ -113,23 +113,23 @@ function _tardis_query_page() {
     if (count($tardis_query_arg) > 1 && preg_match('/^[0-9]{4}$/', $tardis_query_arg[0]) && preg_match('/^[0-9]{2}$/', $tardis_query_arg[1])) {
       $tardis_query_year = $tardis_query_arg[0];
       $tardis_query_month = $tardis_query_arg[1];
-  
+
       // Define the first day of a month and the next as limits.
       $tardis_query_date_min = $tardis_query_year . '-' . $tardis_query_month . '-01';
       $tardis_query_month++;
       $tardis_query_date_max = $tardis_query_year . '-' . $tardis_query_month . '-01';
     }
-  
+
     // Or just a year?
     if (count($tardis_query_arg) < 2 && preg_match('/^[0-9]{4}$/', $tardis_query_arg[0])) {
       $tardis_query_year = $tardis_query_arg[0];
-  
+
       // Define the first day of the year and the next as limits.
       $tardis_query_date_min = $tardis_query_year . '-01-01';
       $tardis_query_year++;
       $tardis_query_date_max = $tardis_query_year . '-01-01';
     }
-  
+
     // So if the URL supplies one or two valid arguments, let's use them
     // to filter only nodes from a given year and month (if applicable).
     $query->condition('created', array(strtotime($tardis_query_date_min), strtotime($tardis_query_date_max)), 'BETWEEN');
