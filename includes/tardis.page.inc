@@ -76,10 +76,10 @@ function tardis_page() {
 }
 
 /**
- * This function queries the db to build a page. 
+ * This function queries the db to build a page.
  *
  * @return array
- *   An array of nodes ready for rendering. 
+ *   An array of nodes ready for rendering.
  */
 function _tardis_query_page() {
   // This is the query. First it sets how many nodes per page:
@@ -107,38 +107,33 @@ function _tardis_query_page() {
   // This helper function returns the year and month from the URL, if present.
   $tardis_query_arg = _tardis_query_arg();
 
-  // This variable is 0 by default; if any date modifies our query,
-  // it turns to 1.
-  $tardis_query_hasdate = 0;
-
-  // Is there a year and a month in the URL?
-  if (count($tardis_query_arg) > 1) {
-    $tardis_query_year = $tardis_query_arg[0];
-    $tardis_query_month = $tardis_query_arg[1];
-
-    // Define the first day of a month and the next as limits.
-    $tardis_query_date_min = $tardis_query_year . '-' . $tardis_query_month . '-01';
-    $tardis_query_month++;
-    $tardis_query_date_max = $tardis_query_year . '-' . $tardis_query_month . '-01';
-
-    $tardis_query_hasdate = 1;
+  // If there are arguments to work with:
+  if (isset($tardis_query_arg[0]) && $tardis_query_arg[0] != '') {
+    // Is there a year and a month in the URL?
+    if (count($tardis_query_arg) > 1 && preg_match('/^[0-9]{4}$/', $tardis_query_arg[0]) && preg_match('/^[0-9]{2}$/', $tardis_query_arg[1])) {
+      $tardis_query_year = $tardis_query_arg[0];
+      $tardis_query_month = $tardis_query_arg[1];
+  
+      // Define the first day of a month and the next as limits.
+      $tardis_query_date_min = $tardis_query_year . '-' . $tardis_query_month . '-01';
+      $tardis_query_month++;
+      $tardis_query_date_max = $tardis_query_year . '-' . $tardis_query_month . '-01';
+    }
+  
+    // Or just a year?
+    if (count($tardis_query_arg) < 2 && preg_match('/^[0-9]{4}$/', $tardis_query_arg[0])) {
+      $tardis_query_year = $tardis_query_arg[0];
+  
+      // Define the first day of the year and the next as limits.
+      $tardis_query_date_min = $tardis_query_year . '-01-01';
+      $tardis_query_year++;
+      $tardis_query_date_max = $tardis_query_year . '-01-01';
+    }
+  
+    // So if the URL supplies one or two valid arguments, let's use them
+    // to filter only nodes from a given year and month (if applicable).
+    $query->condition('created', array(strtotime($tardis_query_date_min), strtotime($tardis_query_date_max)), 'BETWEEN');
   }
-
-  // Or just a year?
-  if (count($tardis_query_arg) < 2 && $tardis_query_arg[0] != '') {
-    $tardis_query_year = $tardis_query_arg[0];
-
-    // Define the first day of the year and the next as limits.
-    $tardis_query_date_min = $tardis_query_year . '-01-01';
-    $tardis_query_year++;
-    $tardis_query_date_max = $tardis_query_year . '-01-01';
-
-    $tardis_query_hasdate = 1;
-  }
-
-  // So if the URL supplies one or two valid arguments, let's use them
-  // to filter only nodes from a given year and month (if applicable).
-  $tardis_query_hasdate == 1 ? $query->condition('created', array(strtotime($tardis_query_date_min), strtotime($tardis_query_date_max)), 'BETWEEN') : "";
 
   return $query->execute()->fetchAllAssoc('nid');
 }

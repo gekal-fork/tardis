@@ -19,9 +19,9 @@ function tardis_general_settings($form, &$form_state) {
   // Group and display it.
   $form['tardis_specific_settings'] = array(
     '#type' => 'fieldset',
-    '#title' => 'TARDIS specific settings',
+    '#title' => t('TARDIS specific settings'),
   );
-  $form['tardis_specific_settings']['tardis_general_links'] = array(
+  $form['tardis_specific_settings']['tardis_specific_links'] = array(
     '#theme' => 'item_list',
     '#type' => 'ul',
     '#items' => $tardis_admin_items,
@@ -123,7 +123,7 @@ function tardis_block_settings($form, &$form_state) {
   $form['tardis_block_month_link'] = array(
     '#type' => 'radios',
     '#title' => t('Month link style'),
-    '#description' => t("Choose whether you want months displayed as numbers or names."),
+    '#description' => t('Choose whether you want months displayed as numbers or names.'),
     '#options' => array(
       'names' => t('names'),
       'numbers' => t('numbers'),
@@ -209,12 +209,12 @@ function tardis_block_settings_validate($form, &$form_state) {
 
   // The "Stop looking at the year" field should obviously be a year.
   if (!preg_match('/^[0-9]{4}$/', $tardis_block_stop_year)) {
-    form_set_error('tardis_block_stop_year', 'Please input a valid year with four digits.');
+    form_set_error('tardis_block_stop_year', t('Please input a valid year with four digits.'));
   }
 
   // And the "How far back?" one should be a two-digit number.
   if (!preg_match('/^[0-9]{2}$/', $tardis_block_past_months) || $tardis_block_past_months <= 1) {
-    form_set_error('tardis_block_past_months', 'Please input a valid number of months between 1 and 99.');
+    form_set_error('tardis_block_past_months', t('Please input a valid number of months between 1 and 99.'));
   }
 }
 
@@ -234,6 +234,6 @@ function tardis_page_settings_validate($form, &$form_state) {
 
   // The "Nodes per page" field should be a two-digit number.
   if (!preg_match('/^[0-9]{2}$/', $tardis_page_nodes_per_page) || $tardis_page_nodes_per_page <= 1) {
-    form_set_error('tardis_page_nodes_per_page', 'Please input a valid number of nodes per page between 1 and 99.');
+    form_set_error('tardis_page_nodes_per_page', t('Please input a valid number of nodes per page between 1 and 99.'));
   }
 }

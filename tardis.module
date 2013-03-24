@@ -129,7 +129,7 @@ function tardis_block_view($delta = '') {
   switch ($delta) {
     case 'tardis':
       // Sanitise block title.
-      $block['subject'] = filter_xss(variable_get('tardis_block_title', 'Recent nodes'));
+      $block['subject'] = filter_xss(t(variable_get('tardis_block_title', 'Recent nodes')));
 
       // Build the query that returns a list of TARDIS links.
       $information = _tardis_query_block();
@@ -191,7 +191,7 @@ function tardis_block_view($delta = '') {
           // the node's created year as argument for the TARDIS block.
           if (!isset($tardis_query_arg[0])) {
             $node = node_load(arg(1));
-            $tardis_query_year = date('Y', $node->created);
+            $tardis_query_year = ($node) ? date('Y', $node->created) : '';
           }
           else {
             $tardis_query_year = $tardis_query_arg[0];
@@ -323,7 +323,7 @@ function _tardis_query_block() {
         $tardis_block_year_link_target = $tardis_page_address . '/' . $tardis_past_year;
       }
 
-      // And we add the year the first time.
+      // We add the year the first time.
       if ($tardis_show_year == 1) {
         $list[] = array(
           'title' => $tardis_past_year,
