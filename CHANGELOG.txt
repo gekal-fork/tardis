@@ -1,0 +1,18 @@
+TARDIS: Changelog
+=================
+
+7.x-1.1, 2013-04-04
+-------------------
+Second stable release. TARDIS now has its first submodule, TARDIS
+Internationalization, and has been moved to its own group in admin/modules.
+
+7.x-1.0, 2013-03-27
+-------------------
+First stable release. No new features. Marks the beginning of development of
+planned features in Roadmap.
+
+7.x-1.x-DEV, 2013-03-27
+-----------------------
+Released after much anticipation and a thorough review by ycshen, Samuel Joos,
+FlakMonkey46, 20th, klausi and cweagans. Includes a block and a page, with
+assorted options.

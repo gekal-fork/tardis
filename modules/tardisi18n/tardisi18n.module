@@ -1,0 +1,58 @@
+<?php
+
+/**
+ * Implements hook_form_FORM_ID_alter().
+ *
+ * This function is preferred over hook_form_alter() because it's more targeted.
+ *
+ */
+function tardisi18n_form_tardis_general_settings_alter(&$form, &$form_state, $form_id) {
+  // Get a list of all available languages:
+  $tardisi18n_languages = language_list();
+
+  // Create an array of languages, starting with the current one and undefined.
+  // That allows users to see either nodes without a defined language, or
+  // nodes which match the current language easily.
+  $options = array(
+    'current_language' => 'Current language',
+    'und' => 'Undefined',
+  );
+  foreach ($tardisi18n_languages as $tardisi18n_language) {
+    $options[$tardisi18n_language->language] = $tardisi18n_language->name;
+  }
+
+  // Then render as a set of checkboxes.
+  $form['tardisi18n_general_languages'] = array(
+    '#type' => 'checkboxes',
+    '#title' => t('Languages'),
+    '#description' => t('In which language(s) should the TARDIS display results?'),
+    '#options' => $options,
+    '#default_value' => variable_get('tardisi18n_general_languages', array('current_language')),
+  );
+
+  return (system_settings_form($form));
+}
+
+/**
+ * TARDIS page hook implementation.
+ *
+ * Alters TARDIS processing, allowing multilingual queries.
+ *
+ */
+function tardisi18n_tardis_query ($query) {
+  // This function uses a hook implemented by the TARDIS to alter the query
+  // in many ways - here, for example, change the results' language.
+  // First we get a list of desired languages set by the user.
+  $tardisi18n_general_languages = variable_get('tardisi18n_general_languages', array('current_language'));
+
+  // This list may have "Current language" in it, which means users want to see
+  // nodes in the same language they're accessing - whichever it is.
+  if ($tardisi18n_general_languages['current_language'] !== 0) {
+    GLOBAL $language;
+    $tardisi18n_general_languages[$language->language] = $language->language;
+  }
+
+  // And finally, we alter the query.
+  $query->addField('n', 'language');
+  $query->condition('language', $tardisi18n_general_languages);
+}

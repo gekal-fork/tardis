@@ -1,0 +1,5 @@
+name = TARDIS Internationalization
+description = Multilingual options for the TARDIS.
+core = 7.x
+package = TARDIS
+configure = admin/structure/tardis

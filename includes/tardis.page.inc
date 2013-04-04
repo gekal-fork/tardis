@@ -103,6 +103,10 @@ function _tardis_query_page() {
     ->limit($tardis_page_nodes_per_page)
     ->orderBy('created', 'DESC');
 
+  // TARDIS hook implementation.
+  // Allows modules to hook into TARDIS processing.
+  module_invoke_all('tardis_query', $query);
+
   // Were a year AND a month supplied? Let's see the last two arguments.
   // This helper function returns the year and month from the URL, if present.
   $tardis_query_arg = _tardis_query_arg();

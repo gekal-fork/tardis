@@ -304,6 +304,11 @@ function _tardis_query_block() {
       ->condition('type', $tardis_general_node_types)
       ->range(0, 1)
       ->condition('created', array(strtotime($tardis_query_date_min), strtotime($tardis_query_date_max)), 'BETWEEN');
+
+    // TARDIS hook implementation.
+    // Allows modules to hook into TARDIS processing.
+    module_invoke_all('tardis_query', $query);
+
     $result = $query->execute()->fetchAllAssoc('nid');
 
     // In case our query was successful, we'll display

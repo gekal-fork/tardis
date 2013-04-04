@@ -47,7 +47,9 @@ link where you can do just that.
 Special thanks
 ==============
 
-- My mom (hi mom!) 
+- My mom (hi mom!)
 - Prometheus6 for the original idea: http://drupal.org/project/montharchive
-- Drupalize.me for their awesome videos and endless patience. If you wanna 
-build your module, and you wanna build it right, go there. 
+- The jolly good chaps at Drupalize.me. If you're looking to build a module and
+don't know where to start, ask them!
+- The generous and patient reviewers, including, but not limited to, ycshen,
+Samuel Joos, FlakMonkey46, 20th, klausi and cweagans.
