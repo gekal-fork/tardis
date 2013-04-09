@@ -51,6 +51,12 @@ function tardis_general_settings($form, &$form_state) {
     '#default_value' => variable_get('tardis_general_node_types', array('page')),
   );
 
+  // Here's a group to place the TARDIS submodules.
+  // This group will be rendered as a vertical tab group.
+  $form['tardis_general_modules'] = array(
+    '#type' => 'vertical_tabs',
+  );
+
   return (system_settings_form($form));
 }
 

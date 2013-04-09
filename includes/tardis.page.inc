@@ -100,12 +100,16 @@ function _tardis_query_page() {
     ->addTag('node_access')
     ->extend('PagerDefault')
     ->condition('type', $tardis_general_node_types)
-    ->limit($tardis_page_nodes_per_page)
-    ->orderBy('created', 'DESC');
+    ->limit($tardis_page_nodes_per_page);
 
   // TARDIS hook implementation.
   // Allows modules to hook into TARDIS processing.
   module_invoke_all('tardis_query', $query);
+
+  // TARDIS Date query join.
+  // Allows TARDIS Date to change the query, restricting it to nodes that
+  // have a certain date.module field. Couldn't do it via tardis_query hooks.
+  tardisdate_join_query ($query);
 
   // Were a year AND a month supplied? Let's see the last two arguments.
   // This helper function returns the year and month from the URL, if present.

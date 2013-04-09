@@ -7,6 +7,13 @@
  *
  */
 function tardisi18n_form_tardis_general_settings_alter(&$form, &$form_state, $form_id) {
+  // TARDIS Internationalization tab.
+  $form['tardis_general_modules_tardisi18n'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('TARDIS Internationalization'),
+    '#group' => 'tardis_general_modules',
+  );
+
   // Get a list of all available languages:
   $tardisi18n_languages = language_list();
 
@@ -22,7 +29,7 @@ function tardisi18n_form_tardis_general_settings_alter(&$form, &$form_state, $fo
   }
 
   // Then render as a set of checkboxes.
-  $form['tardisi18n_general_languages'] = array(
+  $form['tardis_general_modules_tardisi18n']['tardisi18n_general_languages'] = array(
     '#type' => 'checkboxes',
     '#title' => t('Languages'),
     '#description' => t('In which language(s) should the TARDIS display results?'),

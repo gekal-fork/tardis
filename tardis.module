@@ -128,7 +128,7 @@ function tardis_block_view($delta = '') {
 
   switch ($delta) {
     case 'tardis':
-      // Sanitise block title.
+      // Sanitize block title.
       $block['subject'] = filter_xss(t(variable_get('tardis_block_title', 'Recent nodes')));
 
       // Build the query that returns a list of TARDIS links.
@@ -308,6 +308,11 @@ function _tardis_query_block() {
     // TARDIS hook implementation.
     // Allows modules to hook into TARDIS processing.
     module_invoke_all('tardis_query', $query);
+
+    // TARDIS Date query join.
+    // Allows TARDIS Date to change the query, restricting it to nodes that
+    // have a certain date.module field. Couldn't do it via tardis_query hooks.
+    tardisdate_join_query ($query);
 
     $result = $query->execute()->fetchAllAssoc('nid');
 
