@@ -12,7 +12,8 @@ Here's how you do it:
 group.
 
 2. Visit example.com/admin/structure/tardis and scroll to the bottom. You'll see
-a new option called "Languages". Choose your language(s) accordingly. There's
-also "Current language" and "Undefined" for fine-tuning of results.
+a new vertical tab called "TARDIS Internationalization". Choose your language(s)
+under "Languages". There's also "Current language" and "Undefined" for
+fine-tuning of results.
 
 3. Save and profit!

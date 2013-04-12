@@ -234,7 +234,7 @@ function _tardis_query_block() {
   $list = array();
 
   // First we get the current month and year.
-  $tardis_tomorrow = date('d', strtotime('+1 day'));
+  $tardis_today = date('d', time());
   $tardis_this_month = date('m', time());
   $tardis_this_year = date('Y', time());
 
@@ -265,7 +265,6 @@ function _tardis_query_block() {
     // If we're in December, then the next step is November, last year.
     if ($tardis_this_month == 0) {
       $tardis_this_month = 12;
-      $tardis_this_year--;
     }
 
     // If we're on the current month, TARDIS queries the DB looking for nodes
@@ -277,17 +276,19 @@ function _tardis_query_block() {
     // If we're in January, then the next step is December, last year.
     if ($tardis_past_month == 0) {
       $tardis_past_month = 12;
+      $tardis_this_year--;
       $tardis_past_year--;
       $tardis_show_year = 1;
     }
 
     // This is the interval in which we'll investigate.
     if ($tardis_general_current_month == 1) {
-      $tardis_query_date_max = $tardis_this_year . '-' . $tardis_this_month . '-' . $tardis_tomorrow;
+      $tardis_query_date_max = $tardis_this_year . '-' . $tardis_this_month . '-' . $tardis_today;
       $tardis_query_date_min = $tardis_past_year . '-' . $tardis_this_month . '-01';
     }
     else {
-      $tardis_query_date_max = $tardis_this_year . '-' . $tardis_this_month . '-01';
+      $tardis_query_last_day = _tardis_query_last_day($tardis_this_year, $tardis_past_month);
+      $tardis_query_date_max = $tardis_this_year . '-' . $tardis_past_month . '-' . $tardis_query_last_day;
       $tardis_query_date_min = $tardis_past_year . '-' . $tardis_past_month . '-01';
     }
 
@@ -302,8 +303,7 @@ function _tardis_query_block() {
       ))
       ->addTag('node_access')
       ->condition('type', $tardis_general_node_types)
-      ->range(0, 1)
-      ->condition('created', array(strtotime($tardis_query_date_min), strtotime($tardis_query_date_max)), 'BETWEEN');
+      ->range(0, 1);
 
     // TARDIS hook implementation.
     // Allows modules to hook into TARDIS processing.
@@ -312,12 +312,25 @@ function _tardis_query_block() {
     // TARDIS Date query join.
     // Allows TARDIS Date to change the query, restricting it to nodes that
     // have a certain date.module field. Couldn't do it via tardis_query hooks.
-    tardisdate_join_query ($query);
+    if (module_exists('tardisdate')) {
+      _tardisdate_join_query ($query);
+    }
 
+    // Check for any date.module field that might change the query.
+    $tardis_query_date = (module_exists('tardisdate')) ? variable_get('tardisdate_field', 'created') : 'created';
+    if (module_exists('tardisdate') && $tardis_query_date != 'created') {
+      $tardis_query_date .= '_value';
+    }
+    else {
+      $tardis_query_date_min = strtotime($tardis_query_date_min);
+      $tardis_query_date_max = strtotime($tardis_query_date_max);
+    }
+
+    $query->condition($tardis_query_date, array($tardis_query_date_min, $tardis_query_date_max), 'BETWEEN');
     $result = $query->execute()->fetchAllAssoc('nid');
 
-    // In case our query was successful, we'll display
-    // the link for the past month.
+    // In case our query was successful, we'll display the link for the past
+    // month.
     // If we're in January, then we'll display December from the previous year.
     if (count($result) > 0) {
       // In case users set a custom link, here it is:
@@ -361,11 +374,6 @@ function _tardis_query_block() {
         $tardis_past_month_title = $tardis_past_month;
       }
 
-      // If it's January, it's time to go to the previous year.
-      if ($tardis_this_month == 1) {
-        $tardis_this_year--;
-      }
-
       // Now we add a month. Just like with the year link, the month link
       // can be customised in settings.
       $list[count($list) - 1]['children'][] = array(
@@ -378,7 +386,6 @@ function _tardis_query_block() {
           "tardis-month-$tardis_past_month",
         ),
       );
-
       $tardis_block_past_months--;
     }
 
@@ -431,7 +438,21 @@ function _tardis_query_arg() {
 }
 
 /**
- * Helper function that returns month names. 
+ * Helper function that calculates the last day in a given month.
+ */
+function _tardis_query_last_day($tardis_query_year, $tardis_query_month) {
+  // Is it February?
+  if (sprintf('%02d', $tardis_query_month) == '02') {
+    // Is it a leap year?
+    return ($tardis_query_year %4 == 0) ? '29' : '28';
+  }
+  // Is it a month with 30 days?
+  $tardis_short_months = array('04', '06', '09', '11');
+  return (in_array($tardis_query_month, $tardis_short_months)) ? '30' : '31';
+}
+
+/**
+ * Helper function that returns month names.
  */
 function _tardis_month_names() {
   $tardis_month_names = array(

@@ -43,4 +43,6 @@ function tardis_uninstall() {
   variable_del('tardis_page_title_date');
   variable_del('tardis_page_address');
   variable_del('tardis_page_nodes_per_page');
+
+  variable_del('tardis_general_modules__active_tab');
 }

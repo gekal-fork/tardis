@@ -1,6 +1,12 @@
 TARDIS: Changelog
 =================
 
+7.x-1.2, 2013-04-11
+-------------------
+Third stable release. TARDIS has a second submodule, TARDIS Date. Fixed some
+bugs related to TARDIS Internationalization, documentation, settings and
+variables that were left over during uninstall.
+
 7.x-1.1, 2013-04-04
 -------------------
 Second stable release. TARDIS now has its first submodule, TARDIS

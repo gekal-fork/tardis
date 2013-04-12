@@ -35,6 +35,7 @@ function tardisdate_form_tardis_general_settings_alter(&$form, &$form_state, $fo
     '#title' => t('Date field to use'),
     '#options' => $tardisdate_date_fields,
     '#default_value' => variable_get('tardisdate_field', 'created'),
+    '#description' => t('Choose a date field with which to order nodes. Remember: only nodes that have that field will appear in the TARDIS results.'),
   );
 
   return (system_settings_form($form));
@@ -46,7 +47,7 @@ function tardisdate_form_tardis_general_settings_alter(&$form, &$form_state, $fo
  * Unfortunately, couldn't be made into a hook.
  *
  */
-function tardisdate_join_query ($query) {
+function _tardisdate_join_query ($query) {
   // First we check if the user's asked to filter by a certain date.module field
   // and not by the usual 'Created date' field:
   $tardisdate_field = variable_get('tardisdate_field', 'created');
@@ -65,5 +66,8 @@ function tardisdate_join_query ($query) {
       ->orderBy($tardisdate_field_value, 'DESC');
 
     $query->join($subquery, 'd', 'n.nid = d.entity_id');
+  }
+  else {
+    $query->orderBy('created', 'DESC');
   }
 }

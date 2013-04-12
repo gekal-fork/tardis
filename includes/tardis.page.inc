@@ -109,7 +109,12 @@ function _tardis_query_page() {
   // TARDIS Date query join.
   // Allows TARDIS Date to change the query, restricting it to nodes that
   // have a certain date.module field. Couldn't do it via tardis_query hooks.
-  tardisdate_join_query ($query);
+  if (module_exists('tardisdate')) {
+    _tardisdate_join_query ($query);
+  }
+  else {
+    $query->orderBy('created', 'DESC');
+  }
 
   // Were a year AND a month supplied? Let's see the last two arguments.
   // This helper function returns the year and month from the URL, if present.
@@ -123,9 +128,9 @@ function _tardis_query_page() {
       $tardis_query_month = $tardis_query_arg[1];
 
       // Define the first day of a month and the next as limits.
+      $tardis_query_last_day = _tardis_query_last_day($tardis_query_year, $tardis_query_month);
+      $tardis_query_date_max = $tardis_query_year . '-' . $tardis_query_month . '-' . $tardis_query_last_day;
       $tardis_query_date_min = $tardis_query_year . '-' . $tardis_query_month . '-01';
-      $tardis_query_month++;
-      $tardis_query_date_max = $tardis_query_year . '-' . $tardis_query_month . '-01';
     }
 
     // Or just a year?
@@ -134,13 +139,22 @@ function _tardis_query_page() {
 
       // Define the first day of the year and the next as limits.
       $tardis_query_date_min = $tardis_query_year . '-01-01';
-      $tardis_query_year++;
-      $tardis_query_date_max = $tardis_query_year . '-01-01';
+      $tardis_query_date_max = $tardis_query_year . '-12-31';
+    }
+
+    // Check for any date.module field that might change the query.
+    $tardis_query_date = (module_exists('tardisdate')) ? variable_get('tardisdate_field', 'created') : 'created';
+    if (module_exists('tardisdate') && $tardis_query_date != 'created') {
+      $tardis_query_date .= '_value';
+    }
+    else {
+      $tardis_query_date_min = strtotime($tardis_query_date_min);
+      $tardis_query_date_max = strtotime($tardis_query_date_max);
     }
 
     // So if the URL supplies one or two valid arguments, let's use them
     // to filter only nodes from a given year and month (if applicable).
-    $query->condition('created', array(strtotime($tardis_query_date_min), strtotime($tardis_query_date_max)), 'BETWEEN');
+    $query->condition($tardis_query_date, array($tardis_query_date_min, $tardis_query_date_max), 'BETWEEN');
   }
 
   return $query->execute()->fetchAllAssoc('nid');
