@@ -110,7 +110,7 @@ function _tardis_query_page() {
   // Allows TARDIS Date to change the query, restricting it to nodes that
   // have a certain date.module field. Couldn't do it via tardis_query hooks.
   if (module_exists('tardisdate')) {
-    _tardisdate_join_query ($query);
+    _tardisdate_join_query($query);
   }
   else {
     $query->orderBy('created', 'DESC');

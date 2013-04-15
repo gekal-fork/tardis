@@ -313,7 +313,7 @@ function _tardis_query_block() {
     // Allows TARDIS Date to change the query, restricting it to nodes that
     // have a certain date.module field. Couldn't do it via tardis_query hooks.
     if (module_exists('tardisdate')) {
-      _tardisdate_join_query ($query);
+      _tardisdate_join_query($query);
     }
 
     // Check for any date.module field that might change the query.
@@ -444,7 +444,7 @@ function _tardis_query_last_day($tardis_query_year, $tardis_query_month) {
   // Is it February?
   if (sprintf('%02d', $tardis_query_month) == '02') {
     // Is it a leap year?
-    return ($tardis_query_year %4 == 0) ? '29' : '28';
+    return ($tardis_query_year % 4 == 0) ? '29' : '28';
   }
   // Is it a month with 30 days?
   $tardis_short_months = array('04', '06', '09', '11');

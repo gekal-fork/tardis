@@ -1,10 +1,16 @@
 <?php
 
 /**
+ * @file
+ * TARDIS Internationalization module file.
+ *
+ * Alters the TARDIS query, filtering and organizing it by language.
+ */
+
+/**
  * Implements hook_form_FORM_ID_alter().
  *
  * This function is preferred over hook_form_alter() because it's more targeted.
- *
  */
 function tardisi18n_form_tardis_general_settings_alter(&$form, &$form_state, $form_id) {
   // TARDIS Internationalization tab.
@@ -44,9 +50,8 @@ function tardisi18n_form_tardis_general_settings_alter(&$form, &$form_state, $fo
  * TARDIS page hook implementation.
  *
  * Alters TARDIS processing, allowing multilingual queries.
- *
  */
-function tardisi18n_tardis_query ($query) {
+function tardisi18n_tardis_query($query) {
   // This function uses a hook implemented by the TARDIS to alter the query
   // in many ways - here, for example, change the results' language.
   // First we get a list of desired languages set by the user.
@@ -55,7 +60,7 @@ function tardisi18n_tardis_query ($query) {
   // This list may have "Current language" in it, which means users want to see
   // nodes in the same language they're accessing - whichever it is.
   if ($tardisi18n_languages['current_language'] === 'current_language') {
-    GLOBAL $language;
+    global $language;
     // Each option in the $tardisi18n_general_languages array is represented as
     // 'language code' => 'language code' if it's on, or 'language code' => 0
     // if it's off.
