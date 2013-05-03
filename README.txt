@@ -2,20 +2,21 @@ TARDIS
 ======
 
 The TARDIS module allows you to organize your recent nodes chronologically 
-using a block which displays links in the format "YYYY/MM". There's several 
-options available, so install as usual(*) and visit 
-example.com/structure/tardis to config both the TARDIS block and the TARDIS 
-page. 
+using blocks that display links in the format "YYYY/MM" and pages that show
+those nodes filtered by node type.
+
+There's several options available, so install as usual(*) and visit 
+example.com/structure/tardis to set up TARDIS blocks and pages. 
 
 ____________________________________
 
-(*) Download the module from http://Drupal.org/node/1939164 and extract in 
+(*) Download the module from http://drupal.org/project/tardis and extract in 
 your Drupal installation under sites/all/modules. 
 
 Some notes on the more obscure settings: 
 
 
-Tardis block settings
+Tardis block creation
 ---------------------
 
 - "How far back?" means how many links will be displayed in the TARDIS block. 
@@ -27,17 +28,16 @@ in the past.
 As far as I'm concerned, there's no reasonable way to know how long have people 
 been posting, unless you look into the entire node table. That's quite a lot of 
 queries, so I thought I could put a year beyond which you're sure it's 
-pointless to look. 
+pointless to look. Defaults to 2010.
 
-- "Custom link" means you don't have to use the TARDIS page if you have 
-something better - for example, a view. The TARDIS page is pretty simple: a 
+- "Block link" also lets you link to a view. The TARDIS page is pretty simple: a 
 bunch of node teasers, filtered by year (YYYY) and month (MM) as separate 
 arguments, and that's it. So if you have a view, say, 
 example.com/recent/nodes/view, put "recent/nodes/view" here and the TARDIS 
 will take care of the rest. 
 
 
-Tardis page settings
+Tardis page creation
 --------------------
 
 Everything here is pretty self-explanatory, so play with the settings until 
@@ -47,7 +47,7 @@ link where you can do just that.
 
 
 Special thanks
-==============
+--------------
 
 - My mom (hi mom!)
 - Prometheus6 for the original idea: http://drupal.org/project/montharchive

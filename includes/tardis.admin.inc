@@ -9,7 +9,9 @@
 
 /**
  * Main page for the TARDIS settings.
+ *
  * Displays a list of available TARDIS blocks and pages.
+ *
  * TODO: code cleanup.
  * TODO: move submodules group into individual settings pages.
  */
@@ -69,12 +71,14 @@ function tardis_general_settings($form, &$form_state) {
         array('data' => $tardis_block_title),
         array('data' => $tardis_block_node_types_list),
         array('data' => $tardis_block_block_link),
-        array('data' => t('<a href="@edit_link">edit</a> | <a href="@delete_link">delete</a>',
-          array(
-            '@edit_link' => 'tardis/block/edit/' . $tardis_block->name,
-            '@delete_link' => 'tardis/block/delete/' . $tardis_block->name,
+        array('data' => t(
+            '<a href="@edit_link">edit</a> | <a href="@delete_link">delete</a>',
+            array(
+              '@edit_link' => 'tardis/block/edit/' . $tardis_block->name,
+              '@delete_link' => 'tardis/block/delete/' . $tardis_block->name,
+            )
           )
-        )),
+        ),
       );
     }
   }
@@ -148,12 +152,14 @@ function tardis_general_settings($form, &$form_state) {
         array('data' => $tardis_page_title),
         array('data' => $tardis_page_node_types_list),
         array('data' => $tardis_page_address),
-        array('data' => t('<a href="@edit_link">edit</a> | <a href="@delete_link">delete</a>',
-          array(
-            '@edit_link' => 'tardis/page/edit/' . $tardis_page->name,
-            '@delete_link' => 'tardis/page/delete/' . $tardis_page->name,
+        array('data' => t(
+            '<a href="@edit_link">edit</a> | <a href="@delete_link">delete</a>',
+            array(
+              '@edit_link' => 'tardis/page/edit/' . $tardis_page->name,
+              '@delete_link' => 'tardis/page/delete/' . $tardis_page->name,
+            )
           )
-        )),
+        ),
       );
     }
   }
@@ -182,8 +188,7 @@ function tardis_general_settings($form, &$form_state) {
 }
 
 /**
- * System settings form for TARDIS blocks of recent months.
- * This form works for both creating and uptating.
+ * System settings form for TARDIS blocks of recent months. Works for both creating and uptating.
  */
 function tardis_block_settings($form, &$form_state) {
   // Are we creating a new block, or updating an existing one?
@@ -205,7 +210,7 @@ function tardis_block_settings($form, &$form_state) {
 
     // Extra precaution against XSS.
     $tardis_block_title = filter_xss($query['title']);
-    drupal_set_title (t('Edit block <em>@name</em>', array('@name' => $tardis_block_title)), PASS_THROUGH);
+    drupal_set_title(t('Edit block <em>@name</em>', array('@name' => $tardis_block_title)), PASS_THROUGH);
 
     // Node types are stored as an array and must be unserialized.
     $tardis_block_node_types = unserialize($query['node_types']);
@@ -456,8 +461,7 @@ function tardis_delete_confirm_submit($form, &$form_state) {
 }
 
 /**
- * System settings form for TARDIS pages of recent nodes.
- * This form works for both creating and uptating.
+ * System settings form for TARDIS pages of recent nodes. Works for both creating and uptating.
  */
 function tardis_page_settings($form, &$form_state) {
   // Are we creating a new page, or updating an existing one?
@@ -482,9 +486,9 @@ function tardis_page_settings($form, &$form_state) {
 
     // Extra precaution against XSS.
     $tardis_page_title = filter_xss($query['title']);
-    drupal_set_title (t('Edit page <em>@name</em>', array('@name' => $tardis_page_title)), PASS_THROUGH);
+    drupal_set_title(t('Edit page <em>@name</em>', array('@name' => $tardis_page_title)), PASS_THROUGH);
 
-    // Should TARDIS pages have dates appended to their titles? 
+    // Should TARDIS pages have dates appended to their titles?
     $tardis_page_title_date = $query['title_date'];
 
     // Should TARDIS pages begin with the current month or the past month?
@@ -672,7 +676,8 @@ function tardis_settings_submit($form, &$form_state) {
   // But before we display a confirmation message, there's some XSS cleanup.
   $tardis_name = filter_xss($form_state['values']['name']);
 
-  // Also check whether we're creating a new block/page or updating an existing one.
+  // Also check whether we're creating a new block/page or
+  // updating an existing one.
   if ($tardis_update == 'update') {
     drupal_set_message(t('<em>@tardis_name</em> updated successfully.', array('@tardis_name' => $tardis_name)));
   }

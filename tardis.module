@@ -10,57 +10,118 @@
 
 /**
  * Implements hook_menu(). 
+ * TODO: tardis page callbacks.
  */
 function tardis_menu() {
   $items = array();
 
   // Main settings page.
   $items['admin/structure/tardis'] = array(
-    'title' => 'TARDIS settings',
-    'description' => 'Customise your TARDIS page and block.',
+    'title' => 'TARDIS',
+    'description' => 'Create TARDIS pages and blocks.',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('tardis_general_settings'),
     'access arguments' => array('administer site configuration'),
-    'file' => 'includes/tardis.settings.inc',
+    'file' => 'includes/tardis.admin.inc',
   );
 
-  // TARDIS Page settings.
-  $items['admin/structure/tardis/page'] = array(
-    'title' => 'TARDIS page settings',
-    'description' => 'Choose which nodes will be displayed by year and month, as well as the address and title of your list of nodes.',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('tardis_page_settings'),
-    'access arguments' => array('administer site configuration'),
-    'type' => MENU_LOCAL_TASK,
-    'file' => 'includes/tardis.settings.inc',
-  );
-
-  // TARDIS Block settings.
-  $items['admin/structure/tardis/block'] = array(
-    'title' => 'TARDIS block settings',
-    'description' => "Choose how many months you'd like to display, how they're going to look, and to which address they link.",
+  // TARDIS block creation.
+  $items['admin/structure/tardis/block/add'] = array(
+    'title' => 'Create TARDIS block',
+    'description' => 'Create a block with nodes displayed by year and month.',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('tardis_block_settings'),
     'access arguments' => array('administer site configuration'),
-    'type' => MENU_LOCAL_TASK,
-    'file' => 'includes/tardis.settings.inc',
+    'type' => MENU_LOCAL_ACTION,
+    'file' => 'includes/tardis.admin.inc',
+  );
+
+  // TARDIS block settings.
+  $items['admin/structure/tardis/block/edit'] = array(
+    'title' => 'Edit TARDIS block',
+    'description' => 'Customize settings for this TARDIS block.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('tardis_block_settings'),
+    'access arguments' => array('administer site configuration'),
+    'type' => MENU_CALLBACK,
+    'file' => 'includes/tardis.admin.inc',
+  );
+
+  // TARDIS block erasure.
+  $items['admin/structure/tardis/block/delete/%'] = array(
+    'title' => 'Delete TARDIS block',
+    'description' => 'Delete this TARDIS block.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('tardis_delete_confirm', 5),
+    'access arguments' => array('administer site configuration'),
+    'type' => MENU_CALLBACK,
+    'file' => 'includes/tardis.admin.inc',
+  );
+
+  // TARDIS page creation.
+  $items['admin/structure/tardis/page/add'] = array(
+    'title' => 'Create TARDIS page',
+    'description' => 'Create a page with nodes displayed by year and month.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('tardis_page_settings'),
+    'access arguments' => array('administer site configuration'),
+    'type' => MENU_LOCAL_ACTION,
+    'file' => 'includes/tardis.admin.inc',
+  );
+
+  // TARDIS page settings.
+  $items['admin/structure/tardis/page/edit'] = array(
+    'title' => 'Edit TARDIS page',
+    'description' => 'Customize settings for this TARDIS page.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('tardis_page_settings'),
+    'access arguments' => array('administer site configuration'),
+    'type' => MENU_CALLBACK,
+    'file' => 'includes/tardis.admin.inc',
+  );
+
+  // TARDIS page erasure.
+  $items['admin/structure/tardis/page/delete/%'] = array(
+    'title' => 'Delete TARDIS page',
+    'description' => 'Delete this TARDIS page.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('tardis_delete_confirm', 5),
+    'access arguments' => array('administer site configuration'),
+    'type' => MENU_CALLBACK,
+    'file' => 'includes/tardis.admin.inc',
   );
 
   // TARDIS page callback.
-  $tardis_page_address = variable_get('tardis_page_address', 'recent/nodes');
-  // The page title must be run through filter_xss() in order to avoid
-  // any malicious scripts. So we change the title callback, which is usually
-  // t().
-  $tardis_page_title = variable_get('tardis_page_title', 'Recent nodes');
-  $items[$tardis_page_address] = array(
-    'title' => $tardis_page_title,
-    'title callback' => 'filter_xss',
-    'description' => 'View past nodes',
-    'page callback' => 'tardis_page',
-    'access arguments' => array('view TARDIS page'),
-    'type' => MENU_CALLBACK,
-    'file' => 'includes/tardis.page.inc',
-  );
+  // Query the db and fetch all TARDIS page names, titles and addresses.
+  $query = db_select('tardis_pages', 'tp')
+      ->fields('tp', array(
+        'name',
+        'title',
+        'address',
+      ));
+  $results = $query->execute()->fetchAllAssoc('name');
+
+  // And for each one, build a menu item.
+  // Each TARDIS page name is used as argument for the page callback - so we
+  // load the right one.
+  foreach ($results as $result) {
+    $tardis_page_name = $result->name;
+    $tardis_page_title = $result->title;
+    $tardis_page_address = $result->address;
+
+    // Each page title must be run through filter_xss() in order to avoid
+    // malicious scripts. So we change the title callback, which is usually t().
+    $items[$tardis_page_address] = array(
+      'title' => $tardis_page_title,
+      'title callback' => 'filter_xss',
+      'description' => 'View past nodes',
+      'page callback' => 'tardis_page',
+      'page arguments' => array($tardis_page_name),
+      'access arguments' => array('view TARDIS'),
+      'type' => MENU_CALLBACK,
+      'file' => 'includes/tardis.page.inc',
+    );
+  }
 
   return $items;
 }
@@ -68,13 +129,13 @@ function tardis_menu() {
 /**
  * Implements hook_permission(). 
  *
- * See tardis.install for an implementation of hook_enable() 
- * that automatically grants access to the TARDIS. 
+ * See tardis.install for an implementation of hook_enable()
+ * that automatically grants access to the TARDIS.
  */
 function tardis_permission() {
   return array(
     'view TARDIS page' => array(
-      'title' => t('View TARDIS page'),
+      'title' => t('View TARDIS'),
       'description' => t('Allows users access to the TARDIS.'),
     ),
   );
@@ -108,14 +169,23 @@ function tardis_theme() {
 }
 
 /**
- * Implements hook_block_info(). 
+ * Implements hook_block_info().
+ * Fetches block information from the db. 
  */
 function tardis_block_info() {
   $blocks = array();
 
-  $blocks['tardis'] = array(
-    'info' => t('TARDIS'),
-  );
+  $tardis_blocks = db_select('tardis_blocks', 'tb')
+    ->fields('tb', array('name'))
+    ->execute()
+    ->fetchAllAssoc('name');
+
+  foreach ($tardis_blocks as $tardis_block) {
+    $tardis_block_name = $tardis_block->name;
+    $blocks['tardis_' . $tardis_block_name] = array(
+      'info' => 'TARDIS: ' . $tardis_block_name,
+    );
+  }
 
   return $blocks;
 }
@@ -126,110 +196,133 @@ function tardis_block_info() {
 function tardis_block_view($delta = '') {
   $block = array();
 
-  switch ($delta) {
-    case 'tardis':
-      // Sanitize block title.
-      $block['subject'] = filter_xss(t(variable_get('tardis_block_title', 'Recent nodes')));
+  // Through this query we fetch all blocks from the db.
+  $tardis_blocks = db_select('tardis_blocks', 'tb')
+    ->fields('tb')
+    ->execute()
+    ->fetchAllAssoc('name');
 
-      // Build the query that returns a list of TARDIS links.
-      $information = _tardis_query_block();
+  // Usually blocks are declared inside a module using one switch statement.
+  // There's no way to tell how many blocks we have - because that number varies.
+  // Since we can't have a foreach statement inside a switch, we instead have one
+  // switch per block. Drupal is OK with that :)
+  foreach ($tardis_blocks as $tardis_block) {
+    $tardis_block_name = 'tardis_' . $tardis_block->name;
 
-      // Main block content.
-      $content = array();
-
-      // Check whether the user has set links to be nested.
-      $tardis_block_link_nesting_months_years = variable_get('tardis_block_link_nesting_months_years', TRUE);
-
-      // If not, months go together with years.
-      if ($tardis_block_link_nesting_months_years == FALSE) {
-        foreach ($information as $item) {
-
-          // Did the user set month names or numbers?
-          $tardis_block_month_link = variable_get('tardis_block_month_link', 'names');
-          $tardis_block_month_link_separator = ($tardis_block_month_link == 'names') ? ', ' : '/';
-          $tardis_block_nesting_year = $tardis_block_month_link_separator . $item['title'];
-
-          if ($item['children']) {
-            foreach ($item['children'] as $child_item) {
-              $child_item['title'] .= $tardis_block_nesting_year;
-              $content[] = array(
-                'data' => theme('tardis_month', $child_item),
-                'class' => $child_item['class'],
-              );
+    switch ($delta) {
+      case $tardis_block_name:
+        // Sanitize block title.
+        $block['subject'] = $tardis_block->title;
+    
+        $past_months = $tardis_block->past_months;
+        $node_types = unserialize($tardis_block->node_types);
+        $stop_year = $tardis_block->stop_year;
+        $current_month = $tardis_block->current_month;
+        $block_link = $tardis_block->block_link;
+        $year_link = $tardis_block->year_link;
+        $month_link = $tardis_block->month_link;
+    
+        // Build the query that returns a list of TARDIS links.
+        $information = _tardis_query_block($past_months, $node_types, $stop_year, $current_month, $block_link, $year_link, $month_link);
+    
+        // Main block content.
+        $content = array();
+    
+        // Check whether the user has set links to be nested.
+        $tardis_block_link_nesting_months_years = $tardis_block->link_nesting_months_years;
+    
+        // If not, months go together with years.
+        if ($tardis_block_link_nesting_months_years == FALSE) {
+          foreach ($information as $item) {
+    
+            // Did the user set month names or numbers?
+            $tardis_block_month_link = $tardis_block->month_link;
+            $tardis_block_month_link_separator = ($tardis_block_month_link == 'names') ? ', ' : '/';
+            $tardis_block_nesting_year = $tardis_block_month_link_separator . $item['title'];
+    
+            if ($item['children']) {
+              foreach ($item['children'] as $child_item) {
+                $child_item['title'] .= $tardis_block_nesting_year;
+                $content[] = array(
+                  'data' => theme('tardis_month', $child_item),
+                  'class' => $child_item['class'],
+                );
+              }
             }
           }
         }
-      }
-      else {
-        // Or else, months are nested as sublists of each year item.
-        foreach ($information as $item) {
-          $content[] = array(
-            'data' => theme('tardis_year', $item),
-            'class' => $item['class'],
-          );
-          if ($item['children']) {
-            foreach ($item['children'] as $child_item) {
-              $content[count($content) - 1]['children'][] = array(
-                'data' => theme('tardis_month', $child_item),
-                'class' => $child_item['class'],
-              );
+        else {
+          // Or else, months are nested as sublists of each year item.
+          foreach ($information as $item) {
+            $content[] = array(
+              'data' => theme('tardis_year', $item),
+              'class' => $item['class'],
+            );
+            if ($item['children']) {
+              foreach ($item['children'] as $child_item) {
+                $content[count($content) - 1]['children'][] = array(
+                  'data' => theme('tardis_month', $child_item),
+                  'class' => $child_item['class'],
+                );
+              }
             }
           }
-        }
-
-        // Did the user set the block links to render as an accordion?
-        $tardis_block_year_link = variable_get('tardis_block_year_link', 'normal');
-
-        if ($tardis_block_year_link == 'accordion') {
-          // The accordion works by showing the current year's months
-          // and hiding the other years'. So we have to figure out
-          // which year the user is currently viewing.
-          // First off, this function returns the arguments from the URL.
-          $tardis_query_arg = _tardis_query_arg();
-
-          // Check if we're seeing a node, not a TARDIS page, and add
-          // the node's created year as argument for the TARDIS block.
-          if (!isset($tardis_query_arg[0])) {
-            $node = node_load(arg(1));
-            $tardis_query_year = ($node) ? date('Y', $node->created) : '';
+    
+          // Did the user set the block links to render as an accordion?
+          $tardis_block_year_link = $tardis_block->year_link;
+    
+          if ($tardis_block_year_link == 'accordion') {
+            // The accordion works by showing the current year's months
+            // and hiding the other years'. So we have to figure out
+            // which year the user is currently viewing.
+            // First off, this function returns the arguments from the URL.
+            $tardis_query_arg = _tardis_query_arg();
+    
+            // Check if we're seeing a node, not a TARDIS page, and add
+            // the node's created year as argument for the TARDIS block.
+            if (!isset($tardis_query_arg[0])) {
+              $node = node_load(arg(1));
+              $tardis_query_year = ($node) ? date('Y', $node->created) : '';
+            }
+            else {
+              $tardis_query_year = $tardis_query_arg[0];
+            }
+    
+            // Now we'll attach some handy javascript. The following command
+            // passes the variable retrieved from the query to the external
+            // JS file.
+            drupal_add_js(array('tardis' => array('year' => $tardis_query_year)), 'setting');
+            $block['content']['#attached']['js'][] = array(
+              'data' => drupal_get_path('module', 'tardis') . '/js/tardis.js',
+              'scope' => 'header',
+            );
           }
-          else {
-            $tardis_query_year = $tardis_query_arg[0];
-          }
-
-          // Now we'll attach some handy javascript. The following command
-          // passes the variable retrieved from the query to the external
-          // JS file.
-          drupal_add_js(array('tardis' => array('year' => $tardis_query_year)), 'setting');
-          $block['content']['#attached']['js'][] = array(
-            'data' => drupal_get_path('module', 'tardis') . '/js/tardis.js',
-            'scope' => 'header',
-          );
         }
-      }
+    
+        // Regardless of how settings look,
+        // attributes, items and theme stay the same.
+        $block['content']['#attributes'] = array(
+          'classes' => array('tardis', 'tardis-list'),
+          'id' => 'tardis-accordion',
+        );
+        $block['content']['#items'] = $content;
+        $block['content']['#theme'] = 'item_list';
 
-      // Regardless of how settings look,
-      // attributes, items and theme stay the same.
-      $block['content']['#attributes'] = array(
-        'classes' => array('tardis', 'tardis-list'),
-        'id' => 'tardis-accordion',
-      );
-      $block['content']['#items'] = $content;
-      $block['content']['#theme'] = 'item_list';
-
-      break;
+        break;
+    }
   }
 
   return $block;
 }
 
 /**
- * This function builds the links list on the TARDIS block. 
+ * This function builds the links list on the TARDIS block.
  *
  * @return array
- *   A renderable array of links to archive pages. 
+ *   A renderable array of links to archive pages.
+ * TODO: submodules integration
  */
-function _tardis_query_block() {
+function _tardis_query_block($past_months, $node_types, $stop_year, $current_month, $block_link, $year_link, $month_link) {
   // The $list array will hold all of our content.
   $list = array();
 
@@ -243,14 +336,14 @@ function _tardis_query_block() {
   $tardis_past_month = $tardis_this_month;
 
   // Then how many months to go back in time.
-  $tardis_block_past_months = variable_get('tardis_block_past_months', 12);
+  $tardis_block_past_months = $past_months;
 
   // We also restrict our search to the selected node types.
-  $tardis_general_node_types = variable_get('tardis_general_node_types', array('page'));
+  $tardis_block_node_types = $node_types;
 
   // And establish a point in time beyond which the TARDIS shouldn't go,
   // for performance reasons.
-  $tardis_block_stop_year = variable_get('tardis_block_stop_year', 2001);
+  $tardis_block_stop_year = $stop_year;
 
   // By default, we show the year along with the first month in the list.
   $tardis_show_year = 1;
@@ -260,7 +353,7 @@ function _tardis_query_block() {
   // supposed to look into.
   // If users specify the current month as part of the TARDIS block, the list
   // begins with the current day and month.
-  $tardis_general_current_month = variable_get('tardis_general_current_month', 0);
+  $tardis_block_current_month = $current_month;
   while ($tardis_block_past_months > 0 && $tardis_past_year >= $tardis_block_stop_year) {
     // If we're in December, then the next step is November, last year.
     if ($tardis_this_month == 0) {
@@ -271,7 +364,7 @@ function _tardis_query_block() {
     // from the first day of the month up until today.
     // If we're on the previous month, or if users choose not to display the
     // current month, TARDIS creates a a one-month period for the queries.
-    ($tardis_general_current_month == 0) ? $tardis_past_month = $tardis_this_month - 1 : '';
+    ($tardis_block_current_month == 0) ? $tardis_past_month = $tardis_this_month - 1 : '';
 
     // If we're in January, then the next step is December, last year.
     if ($tardis_past_month == 0) {
@@ -282,7 +375,7 @@ function _tardis_query_block() {
     }
 
     // This is the interval in which we'll investigate.
-    if ($tardis_general_current_month == 1) {
+    if ($tardis_block_current_month == 1) {
       $tardis_query_date_max = $tardis_this_year . '-' . $tardis_this_month . '-' . $tardis_today;
       $tardis_query_date_min = $tardis_past_year . '-' . $tardis_this_month . '-01';
     }
@@ -302,7 +395,7 @@ function _tardis_query_block() {
         'created',
       ))
       ->addTag('node_access')
-      ->condition('type', $tardis_general_node_types)
+      ->condition('type', $tardis_block_node_types)
       ->range(0, 1);
 
     // TARDIS hook implementation.
@@ -334,11 +427,11 @@ function _tardis_query_block() {
     // If we're in January, then we'll display December from the previous year.
     if (count($result) > 0) {
       // In case users set a custom link, here it is:
-      $tardis_block_custom_link = variable_get('tardis_block_custom_link', '');
-      $tardis_page_address = ($tardis_block_custom_link == '') ? variable_get('tardis_page_address', 'recent/nodes') : $tardis_block_custom_link;
+      $tardis_block_block_link = $block_link;
+      $tardis_page_address = ($tardis_block_block_link == '') ? 'recent/nodes' : $tardis_block_block_link;
 
       // Did users set the block years to render without links?
-      $tardis_block_year_link = variable_get('tardis_block_year_link', 'normal');
+      $tardis_block_year_link = $year_link;
       if ($tardis_block_year_link == 'no_link') {
         $tardis_block_year_link_target = NULL;
       }
@@ -363,7 +456,7 @@ function _tardis_query_block() {
       $tardis_past_month = sprintf('%02d', $tardis_past_month);
 
       // Did the user set months to render as names or numbers?
-      $tardis_block_month_link = variable_get('tardis_block_month_link', 'names');
+      $tardis_block_month_link = $month_link;
 
       if ($tardis_block_month_link == 'names') {
         // This helper funtion retrieves month names.
@@ -390,8 +483,8 @@ function _tardis_query_block() {
     }
 
     // Finally, we step back one month in time.
-    if ($tardis_general_current_month == 1) {
-      $tardis_general_current_month = 0;
+    if ($tardis_block_current_month == 1) {
+      $tardis_block_current_month = 0;
     }
     else {
       $tardis_this_month--;
@@ -403,7 +496,44 @@ function _tardis_query_block() {
 }
 
 /**
- * Function that takes the arguments from the URL in an orderly fashion.
+ * Helper function that writes records to db.
+ */
+function _tardis_save($tardis_table, $tardis_values) {
+  // Are we creating a new block, or updating an existing one?
+  $tardis_update = $tardis_values->update;
+  $tardis_name = $tardis_values->name;
+
+  // We're either updating an existing block:
+  if ($tardis_update !== 0) {
+    if ($tardis_update != $tardis_name) {
+      // If the name has changed, we need to delete the old record
+      // and create a new one.
+      _tardis_delete($tardis_table, $tardis_update);
+      drupal_write_record($tardis_table, $tardis_values);
+    }
+    else {
+      drupal_write_record($tardis_table, $tardis_values, 'name');
+    }
+    return 'update';
+  }
+  // Or creating a new one:
+  else {
+    drupal_write_record($tardis_table, $tardis_values);
+  }
+  return 'save';
+}
+
+/**
+ * Helper function that deletes records from db.
+ */
+function _tardis_delete($tardis_table, $tardis_name) {
+  db_delete($tardis_table)
+    ->condition('name', $tardis_name)
+    ->execute();
+}
+
+/**
+ * Helper function that takes the arguments from the URL in an orderly fashion.
  */
 function _tardis_query_arg() {
   // arg() returns arguments from the URL.
@@ -444,7 +574,7 @@ function _tardis_query_last_day($tardis_query_year, $tardis_query_month) {
   // Is it February?
   if (sprintf('%02d', $tardis_query_month) == '02') {
     // Is it a leap year?
-    return ($tardis_query_year % 4 == 0) ? '29' : '28';
+    return ($tardis_query_year %4 == 0) ? '29' : '28';
   }
   // Is it a month with 30 days?
   $tardis_short_months = array('04', '06', '09', '11');

@@ -6,14 +6,29 @@
  */
 
 /**
- * This function builds the page.
+ * This function builds each page according to the argument received.
  *
  * @return array
  *   A rendered, paged list of node teasers. 
  */
-function tardis_page() {
+function tardis_page($tardis_page_name) {
+  // $tardis_page_name is the argument used to retrieve a TARDIS page from the db.
+  $args = func_get_args();
+  array_shift($args);
+  $tardis_page = db_select('tardis_pages', 'tp')
+    ->fields('tp')
+    ->condition('name', $tardis_page_name)
+    ->execute()
+    ->fetchAssoc('name');
+
+  $name = $tardis_page['name'];
+  $title_date = $tardis_page['title_date'];
+  $nodes_per_page = $tardis_page['nodes_per_page'];
+  // Node types are stored in serialized form and must be unserialized.
+  $node_types = unserialize($tardis_page['node_types']);
+
   // How did the user choose to append the current date to the page title?
-  $tardis_page_title_date = variable_get('tardis_page_title_date', 'no_date');
+  $tardis_page_title_date = $title_date;
 
   // Unless the user asked not to append the date to the page title:
   if ($tardis_page_title_date != 'no_date') {
@@ -21,7 +36,7 @@ function tardis_page() {
     $title = drupal_get_title();
 
     // Retrieve URL arguments.
-    $tardis_query_arg = _tardis_query_arg();
+    $tardis_query_arg = _tardis_query_arg($nodes_per_page, $node_types);
 
     // If we have a month, there's a distinction between
     // how months are displayed: numbers or names.
@@ -49,7 +64,7 @@ function tardis_page() {
   }
 
   // Calls the page query function.
-  $result = _tardis_query_page();
+  $result = _tardis_query_page($nodes_per_page, $node_types);
 
   // Assemble a list of NIDs.
   $nids = array();
@@ -81,12 +96,11 @@ function tardis_page() {
  * @return array
  *   An array of nodes ready for rendering.
  */
-function _tardis_query_page() {
-  // This is the query. First it sets how many nodes per page:
-  $tardis_page_nodes_per_page = variable_get('tardis_page_nodes_per_page', 10);
-
-  // Then it takes the node types that were chosen to be displayed:
-  $tardis_general_node_types = variable_get('tardis_general_node_types', array('page'));
+function _tardis_query_page($nodes_per_page, $node_types) {
+  // This is the query. The variable $nodes_per_page sets how many nodes
+  // per page to be displayed.
+  // The variable $node_types aids in filtering the node types that were chosen
+  // to be displayed:
 
   // The query also limits nodes by access permission,
   // so if users have no permissions for certain node types,
@@ -99,8 +113,8 @@ function _tardis_query_page() {
     ))
     ->addTag('node_access')
     ->extend('PagerDefault')
-    ->condition('type', $tardis_general_node_types)
-    ->limit($tardis_page_nodes_per_page);
+    ->condition('type', $node_types)
+    ->limit($nodes_per_page);
 
   // TARDIS hook implementation.
   // Allows modules to hook into TARDIS processing.
