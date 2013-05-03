@@ -12,7 +12,8 @@
  *   A rendered, paged list of node teasers. 
  */
 function tardis_page($tardis_page_name) {
-  // $tardis_page_name is the argument used to retrieve a TARDIS page from the db.
+  // $tardis_page_name is the argument used
+  // to retrieve a TARDIS page from the db.
   $args = func_get_args();
   array_shift($args);
   $tardis_page = db_select('tardis_pages', 'tp')
@@ -100,8 +101,7 @@ function _tardis_query_page($nodes_per_page, $node_types) {
   // This is the query. The variable $nodes_per_page sets how many nodes
   // per page to be displayed.
   // The variable $node_types aids in filtering the node types that were chosen
-  // to be displayed:
-
+  // to be displayed.
   // The query also limits nodes by access permission,
   // so if users have no permissions for certain node types,
   // they won't see them.

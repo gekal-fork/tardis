@@ -26,8 +26,7 @@ function tardis_enable() {
 
 /**
  * Implements hook_schema().
- *
-*/
+ */
 function tardis_schema() {
   $schema['tardis_blocks'] = array(
     'description' => 'Stores settings for custom TARDIS blocks.',
@@ -115,7 +114,7 @@ function tardis_schema() {
         'type' => 'varchar',
         'length' => 255,
         'not null' => TRUE,
-        'description' => 'An address for the TARDIS page.'
+        'description' => 'An address for the TARDIS page.',
       ),
       'title' => array(
         'type' => 'varchar',
@@ -259,7 +258,7 @@ function tardis_update_7100() {
         'type' => 'varchar',
         'length' => 255,
         'not null' => TRUE,
-        'description' => 'An address for the TARDIS page.'
+        'description' => 'An address for the TARDIS page.',
       ),
       'title' => array(
         'type' => 'varchar',

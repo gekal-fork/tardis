@@ -170,6 +170,7 @@ function tardis_theme() {
 
 /**
  * Implements hook_block_info().
+ *
  * Fetches block information from the db. 
  */
 function tardis_block_info() {
@@ -203,9 +204,10 @@ function tardis_block_view($delta = '') {
     ->fetchAllAssoc('name');
 
   // Usually blocks are declared inside a module using one switch statement.
-  // There's no way to tell how many blocks we have - because that number varies.
-  // Since we can't have a foreach statement inside a switch, we instead have one
-  // switch per block. Drupal is OK with that :)
+  // There's no way to tell how many blocks we have
+  // because that number varies.
+  // Since we can't have a foreach statement inside a switch, we instead have
+  // one switch per block. Drupal is OK with that :)
   foreach ($tardis_blocks as $tardis_block) {
     $tardis_block_name = 'tardis_' . $tardis_block->name;
 
@@ -213,7 +215,7 @@ function tardis_block_view($delta = '') {
       case $tardis_block_name:
         // Sanitize block title.
         $block['subject'] = $tardis_block->title;
-    
+
         $past_months = $tardis_block->past_months;
         $node_types = unserialize($tardis_block->node_types);
         $stop_year = $tardis_block->stop_year;
@@ -221,25 +223,25 @@ function tardis_block_view($delta = '') {
         $block_link = $tardis_block->block_link;
         $year_link = $tardis_block->year_link;
         $month_link = $tardis_block->month_link;
-    
+
         // Build the query that returns a list of TARDIS links.
         $information = _tardis_query_block($past_months, $node_types, $stop_year, $current_month, $block_link, $year_link, $month_link);
-    
+
         // Main block content.
         $content = array();
-    
+
         // Check whether the user has set links to be nested.
         $tardis_block_link_nesting_months_years = $tardis_block->link_nesting_months_years;
-    
+
         // If not, months go together with years.
         if ($tardis_block_link_nesting_months_years == FALSE) {
           foreach ($information as $item) {
-    
+
             // Did the user set month names or numbers?
             $tardis_block_month_link = $tardis_block->month_link;
             $tardis_block_month_link_separator = ($tardis_block_month_link == 'names') ? ', ' : '/';
             $tardis_block_nesting_year = $tardis_block_month_link_separator . $item['title'];
-    
+
             if ($item['children']) {
               foreach ($item['children'] as $child_item) {
                 $child_item['title'] .= $tardis_block_nesting_year;
@@ -267,17 +269,17 @@ function tardis_block_view($delta = '') {
               }
             }
           }
-    
+
           // Did the user set the block links to render as an accordion?
           $tardis_block_year_link = $tardis_block->year_link;
-    
+
           if ($tardis_block_year_link == 'accordion') {
             // The accordion works by showing the current year's months
             // and hiding the other years'. So we have to figure out
             // which year the user is currently viewing.
             // First off, this function returns the arguments from the URL.
             $tardis_query_arg = _tardis_query_arg();
-    
+
             // Check if we're seeing a node, not a TARDIS page, and add
             // the node's created year as argument for the TARDIS block.
             if (!isset($tardis_query_arg[0])) {
@@ -287,7 +289,7 @@ function tardis_block_view($delta = '') {
             else {
               $tardis_query_year = $tardis_query_arg[0];
             }
-    
+
             // Now we'll attach some handy javascript. The following command
             // passes the variable retrieved from the query to the external
             // JS file.
@@ -298,7 +300,7 @@ function tardis_block_view($delta = '') {
             );
           }
         }
-    
+
         // Regardless of how settings look,
         // attributes, items and theme stay the same.
         $block['content']['#attributes'] = array(
@@ -574,7 +576,7 @@ function _tardis_query_last_day($tardis_query_year, $tardis_query_month) {
   // Is it February?
   if (sprintf('%02d', $tardis_query_month) == '02') {
     // Is it a leap year?
-    return ($tardis_query_year %4 == 0) ? '29' : '28';
+    return ($tardis_query_year % 4 == 0) ? '29' : '28';
   }
   // Is it a month with 30 days?
   $tardis_short_months = array('04', '06', '09', '11');
