@@ -71,13 +71,13 @@ function tardis_general_settings($form, &$form_state) {
         array('data' => $tardis_block_title),
         array('data' => $tardis_block_node_types_list),
         array('data' => $tardis_block_block_link),
-        array('data' =>
-          t(
+        array(
+          'data' => t(
             '<a href="@edit_link">edit</a> | <a href="@delete_link">delete</a>',
             array(
               '@edit_link' => 'tardis/block/edit/' . $tardis_block->name,
               '@delete_link' => 'tardis/block/delete/' . $tardis_block->name,
-            )
+            ),
           ),
         ),
       );
@@ -153,13 +153,13 @@ function tardis_general_settings($form, &$form_state) {
         array('data' => $tardis_page_title),
         array('data' => $tardis_page_node_types_list),
         array('data' => $tardis_page_address),
-        array('data' =>
-          t(
+        array(
+          'data' => t(
             '<a href="@edit_link">edit</a> | <a href="@delete_link">delete</a>',
             array(
               '@edit_link' => 'tardis/page/edit/' . $tardis_page->name,
               '@delete_link' => 'tardis/page/delete/' . $tardis_page->name,
-            )
+            ),
           ),
         ),
       );
