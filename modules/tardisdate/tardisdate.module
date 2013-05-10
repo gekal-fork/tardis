@@ -8,55 +8,60 @@
  */
 
 /**
- * Implements hook_form_FORM_ID_alter().
+ * Implements hook_form_alter().
  *
- * This function is preferred over hook_form_alter() because it's more targeted.
+ * This function is preferred over hook_form_FORM_ID_alter() because it's
+ * written once for use by both the TARDIS block and page creation forms.
  */
-function tardisdate_form_tardis_general_settings_alter(&$form, &$form_state, $form_id) {
-  // TARDIS Date vertical tab.
-  $form['tardis_general_modules_tardisdate'] = array(
-    '#type' => 'fieldset',
-    '#title' => t('TARDIS Date'),
-    '#group' => 'tardis_general_modules',
-  );
+function tardisdate_form_alter(&$form, &$form_state, $form_id) {
+  // If the form is a TARDIS creation one - either block or page - alter it.
+  if ($form_id == 'tardis_page_settings' || $form_id == 'tardis_block_settings') {
 
-  // First we have to get a list of all fields in all node types:
-  $tardisdate_fields = field_info_fields();
+    // Which field is being used to filter nodes? Default created field or
+    // a date.module one?
+    $tardisdate_field = $form['tardisdate_update']['#value'];
 
-  // And define an options array to be populated with such fields, beginning
-  // with the usual "Created date" value.
-  $tardisdate_date_fields = array('created' => 'Default created date');
+    // TARDIS Date vertical tab.
+    $form['tardis_modules_tardisdate'] = array(
+      '#type' => 'fieldset',
+      '#title' => t('TARDIS Date'),
+      '#group' => 'tardis_submodules',
+    );
 
-  // But only date fields which are in use:
-  foreach ($tardisdate_fields as $tardisdate_field) {
-    if ($tardisdate_field['module'] == 'date' && $tardisdate_field['active'] == 1 && $tardisdate_field['deleted'] == 0) {
-      $tardisdate_field_name = $tardisdate_field['field_name'];
-      $tardisdate_date_fields[$tardisdate_field_name] = $tardisdate_field_name;
+    // Now we have to get a list of all fields in all node types:
+    $tardisdate_options = field_info_fields();
+
+    // And define an options array to be populated with such fields, beginning
+    // with the usual "Created date" value.
+    $tardisdate_date_fields = array('created' => 'Default created date');
+
+    // But only date fields which are in use:
+    foreach ($tardisdate_options as $tardisdate_option) {
+      if ($tardisdate_option['module'] == 'date' && $tardisdate_option['active'] == 1 && $tardisdate_option['deleted'] == 0) {
+        $tardisdate_option_name = $tardisdate_option['field_name'];
+        $tardisdate_date_fields[$tardisdate_option_name] = $tardisdate_option_name;
+      }
     }
+
+    // And finally create one option for each date.module field:
+    $form['tardis_modules_tardisdate']['tardisdate_field'] = array(
+      '#type' => 'select',
+      '#title' => t('Date field to use'),
+      '#options' => $tardisdate_date_fields,
+      '#default_value' => $tardisdate_field,
+      '#description' => t('Choose a date field with which to order nodes. Remember: only nodes that have that field will appear in the TARDIS results.'),
+    );
+
+    return (system_settings_form($form));
   }
-
-  // And finally create one option for each date.module field:
-  $form['tardis_general_modules_tardisdate']['tardisdate_field'] = array(
-    '#type' => 'select',
-    '#title' => t('Date field to use'),
-    '#options' => $tardisdate_date_fields,
-    '#default_value' => variable_get('tardisdate_field', 'created'),
-    '#description' => t('Choose a date field with which to order nodes. Remember: only nodes that have that field will appear in the TARDIS results.'),
-  );
-
-  return (system_settings_form($form));
 }
 
 /**
  * This function alters the TARDIS query, filtering it by date.module fields.
- *
- * Unfortunately, couldn't be made into a hook.
  */
-function _tardisdate_join_query($query) {
+function _tardisdate_join_query($query, $tardisdate_field) {
   // First we check if the user's asked to filter by a certain date.module field
   // and not by the usual 'Created date' field:
-  $tardisdate_field = variable_get('tardisdate_field', 'created');
-
   if ($tardisdate_field != 'created') {
     $tardisdate_field_value = $tardisdate_field . '_value';
     $tardisdate_field_table = 'field_data_' . $tardisdate_field;

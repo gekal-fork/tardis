@@ -4,13 +4,12 @@
  * @file
  * Main module file.
  *
- * Instantiates the TARDIS block, menu items, theme
+ * Instantiates TARDIS blocks, menu items, theme
  * and a couple of helper functions.
  */
 
 /**
- * Implements hook_menu(). 
- * TODO: tardis page callbacks.
+ * Implements hook_menu().
  */
 function tardis_menu() {
   $items = array();
@@ -20,7 +19,7 @@ function tardis_menu() {
     'title' => 'TARDIS',
     'description' => 'Create TARDIS pages and blocks.',
     'page callback' => 'drupal_get_form',
-    'page arguments' => array('tardis_general_settings'),
+    'page arguments' => array('tardis_overview'),
     'access arguments' => array('administer site configuration'),
     'file' => 'includes/tardis.admin.inc',
   );
@@ -91,8 +90,8 @@ function tardis_menu() {
     'file' => 'includes/tardis.admin.inc',
   );
 
-  // TARDIS page callback.
-  // Query the db and fetch all TARDIS page names, titles and addresses.
+  // TARDIS page callback. There can be several TARDIS pages, so query the db
+  // and fetch all TARDIS page names, titles and addresses.
   $query = db_select('tardis_pages', 'tp')
       ->fields('tp', array(
         'name',
@@ -101,9 +100,9 @@ function tardis_menu() {
       ));
   $results = $query->execute()->fetchAllAssoc('name');
 
-  // And for each one, build a menu item.
-  // Each TARDIS page name is used as argument for the page callback - so we
-  // load the right one.
+  // For each one, build a menu item.
+  // Each TARDIS page name is used as argument for the page callback - in order
+  // to load the right one.
   foreach ($results as $result) {
     $tardis_page_name = $result->name;
     $tardis_page_title = $result->title;
@@ -117,7 +116,7 @@ function tardis_menu() {
       'description' => 'View past nodes',
       'page callback' => 'tardis_page',
       'page arguments' => array($tardis_page_name),
-      'access arguments' => array('view TARDIS'),
+      'access arguments' => array('view TARDIS page'),
       'type' => MENU_CALLBACK,
       'file' => 'includes/tardis.page.inc',
     );
@@ -135,7 +134,7 @@ function tardis_menu() {
 function tardis_permission() {
   return array(
     'view TARDIS page' => array(
-      'title' => t('View TARDIS'),
+      'title' => t('View TARDIS page'),
       'description' => t('Allows users access to the TARDIS.'),
     ),
   );
@@ -171,21 +170,26 @@ function tardis_theme() {
 /**
  * Implements hook_block_info().
  *
- * Fetches block information from the db. 
+ * Fetches all the TARDIS blocks from the db.
  */
 function tardis_block_info() {
   $blocks = array();
 
+  // Each block must be declared with a name and a subject. We use the
+  // machine-readable name for both...
   $tardis_blocks = db_select('tardis_blocks', 'tb')
     ->fields('tb', array('name'))
     ->execute()
     ->fetchAllAssoc('name');
 
-  foreach ($tardis_blocks as $tardis_block) {
-    $tardis_block_name = $tardis_block->name;
-    $blocks['tardis_' . $tardis_block_name] = array(
-      'info' => 'TARDIS: ' . $tardis_block_name,
-    );
+  // ... with slight differences.
+  if ($tardis_blocks > 0) {
+    foreach ($tardis_blocks as $tardis_block) {
+      $tardis_block_name = $tardis_block->name;
+      $blocks['tardis_' . $tardis_block_name] = array(
+        'info' => 'TARDIS: ' . $tardis_block_name,
+      );
+    }
   }
 
   return $blocks;
@@ -204,10 +208,9 @@ function tardis_block_view($delta = '') {
     ->fetchAllAssoc('name');
 
   // Usually blocks are declared inside a module using one switch statement.
-  // There's no way to tell how many blocks we have
-  // because that number varies.
+  // There's no way to tell how many blocks we have because that number varies.
   // Since we can't have a foreach statement inside a switch, we instead have
-  // one switch per block. Drupal is OK with that :)
+  // one switch per block inside a foreach. Drupal is OK with that :)
   foreach ($tardis_blocks as $tardis_block) {
     $tardis_block_name = 'tardis_' . $tardis_block->name;
 
@@ -224,8 +227,30 @@ function tardis_block_view($delta = '') {
         $year_link = $tardis_block->year_link;
         $month_link = $tardis_block->month_link;
 
+/**/
+        // If TARDIS Date module is on, fetch the date field used in the query.
+        if (module_exists('tardisdate')) {
+          $tardisdate_field = ($tardis_block->tardisdate_field != '') ? $tardis_block->tardisdate_field : 'created';
+        }
+        else {
+          $tardisdate_field = '';
+        }
+/**/
+
+/**/
+        // If TARDIS Internationalization is on, fetch the query language.
+        // There might be no language yet, so we need a default value.
+        // Also the language is an array, which is stored in serialized form.
+        if (module_exists('tardisi18n')) {
+          $tardisi18n_lang = ($tardis_block->tardisi18n_lang != '') ? unserialize($tardis_block->tardisi18n_lang) : array('cur_lang' => 'cur_lang');
+        }
+        else {
+          $tardisi18n_lang = '';
+        }
+/**/
+
         // Build the query that returns a list of TARDIS links.
-        $information = _tardis_query_block($past_months, $node_types, $stop_year, $current_month, $block_link, $year_link, $month_link);
+        $information = _tardis_query_block($past_months, $node_types, $stop_year, $current_month, $block_link, $year_link, $month_link, $tardisdate_field, $tardisi18n_lang);
 
         // Main block content.
         $content = array();
@@ -324,7 +349,7 @@ function tardis_block_view($delta = '') {
  *   A renderable array of links to archive pages.
  * TODO: submodules integration
  */
-function _tardis_query_block($past_months, $node_types, $stop_year, $current_month, $block_link, $year_link, $month_link) {
+function _tardis_query_block($past_months, $node_types, $stop_year, $current_month, $block_link, $year_link, $month_link, $tardisdate_field, $tardisi18n_lang) {
   // The $list array will hold all of our content.
   $list = array();
 
@@ -400,28 +425,51 @@ function _tardis_query_block($past_months, $node_types, $stop_year, $current_mon
       ->condition('type', $tardis_block_node_types)
       ->range(0, 1);
 
-    // TARDIS hook implementation.
-    // Allows modules to hook into TARDIS processing.
-    module_invoke_all('tardis_query', $query);
+/**/
+    // TARDIS Internationalization query join.
+    // Allows TARDIS Internationalization to change the query, restricting it
+    // to nodes that are in a certain language.
+    if (module_exists('tardisi18n')) {
+      _tardisi18n_join_query($query, $tardisi18n_lang);
+    }
+    else {
+      $tardisi18n_lang = '';
+    }
+/**/
 
+/**/
     // TARDIS Date query join.
     // Allows TARDIS Date to change the query, restricting it to nodes that
-    // have a certain date.module field. Couldn't do it via tardis_query hooks.
+    // have a certain date.module field.
     if (module_exists('tardisdate')) {
-      _tardisdate_join_query($query);
-    }
+      _tardisdate_join_query($query, $tardisdate_field);
 
-    // Check for any date.module field that might change the query.
-    $tardis_query_date = (module_exists('tardisdate')) ? variable_get('tardisdate_field', 'created') : 'created';
+      // Check for any date.module field that might change the query.
+      $tardis_query_date = $tardisdate_field;
+    }
+    else {
+      $tardis_query_date = 'created';
+    }
+/**/
+
+/**/
     if (module_exists('tardisdate') && $tardis_query_date != 'created') {
+      // date.module fields are stored as YYYY-MM-DD HH:MM:SS
+      // and need no conversion.
       $tardis_query_date .= '_value';
     }
     else {
+      // Base table Created fields are stored as timestamps
+      // and need to be converted.
       $tardis_query_date_min = strtotime($tardis_query_date_min);
       $tardis_query_date_max = strtotime($tardis_query_date_max);
     }
 
+    // So if the URL supplies one or two valid arguments, let's use them
+    // to filter only nodes from a given year and month (if applicable).
     $query->condition($tardis_query_date, array($tardis_query_date_min, $tardis_query_date_max), 'BETWEEN');
+/**/
+
     $result = $query->execute()->fetchAllAssoc('nid');
 
     // In case our query was successful, we'll display the link for the past
@@ -498,11 +546,15 @@ function _tardis_query_block($past_months, $node_types, $stop_year, $current_mon
 }
 
 /**
+ * Helper functions
+ */
+
+/**
  * Helper function that writes records to db.
  */
 function _tardis_save($tardis_table, $tardis_values) {
   // Are we creating a new block, or updating an existing one?
-  $tardis_update = $tardis_values->update;
+  $tardis_update = $tardis_values->tardis_update;
   $tardis_name = $tardis_values->name;
 
   // We're either updating an existing block:

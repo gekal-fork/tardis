@@ -8,182 +8,242 @@
  */
 
 /**
- * Main page for the TARDIS settings.
+ * Main page for the TARDIS admin section.
  *
- * Displays a list of available TARDIS blocks and pages.
+ * Displays an overview of available TARDIS blocks and pages.
  *
- * TODO: code cleanup.
- * TODO: move submodules group into individual settings pages.
+ * TODO: submodule hooks.
  */
-function tardis_general_settings($form, &$form_state) {
+function tardis_overview($form, &$form_state) {
   // Here we build a table of available TARDIS blocks.
-  // First off we need to get them from the DB - if there's any.
-  $tardis_blocks = db_select('tardis_blocks', 'tb')
-    ->fields('tb', array(
-      'name',
-      'title',
-      'node_types',
-      'block_link',
-    ))
+  $tardis_element_type = 'block';
+
+  // First we need to get all, if any, from the DB.
+  $tardis_elements = db_select('tardis_blocks', 'tb')
+    ->fields('tb')
     ->orderBy('name', 'ASC')
     ->execute()
     ->fetchAllAssoc('name');
 
-  if (count($tardis_blocks) > 0) {
+  if (count($tardis_elements) > 0) {
     // Then we build the table to place them in:
-    $tardis_blocks_header = array(
+    $tardis_elements_header = array(
       array('data' => t('Block name')),
       array('data' => t('Title')),
       array('data' => t('Node types')),
       array('data' => t('Link')),
-      array('data' => t('Operations')),
     );
 
-/*
-    array('data' => t('Date field')),
-    array('data' => t('Languages')),
-*/
+/**/
+    // If TARDIS Date is enabled, add an extra column.
+    (module_exists('tardisdate')) ? $tardis_elements_header[] = array('data' => t('Date field')) : '';
 
-    foreach ($tardis_blocks as $tardis_block) {
+    // If TARDIS Internationalization is enabled, add an extra column.
+    (module_exists('tardisi18n')) ? $tardis_elements_header[] = array('data' => t('Languages')) : '';
+/**/
+
+    $tardis_elements_header[] = array('data' => t('Operations'));
+
+    foreach ($tardis_elements as $tardis_element) {
       // We build each row using data extracted from the db.
-      $tardis_block_name = $tardis_block->name;
-      $tardis_block_title = $tardis_block->title;
+      $tardis_element_name = $tardis_element->name;
+      $tardis_element_title = $tardis_element->title;
 
       // Node types are stored as an array and, therefore, require some
       // processing. They're in serialized form, which must be unserialized.
       // Then, we remove the ones which are off (zero).
-      $tardis_block_node_types = unserialize($tardis_block->node_types);
-      foreach ($tardis_block_node_types as $key => $value) {
-        if ($tardis_block_node_types[$key] === 0) {
-          unset($tardis_block_node_types[$key]);
+      $tardis_element_node_types = unserialize($tardis_element->node_types);
+      foreach ($tardis_element_node_types as $key => $value) {
+        if ($tardis_element_node_types[$key] === 0) {
+          unset($tardis_element_node_types[$key]);
         }
       }
-      $tardis_block_node_types_list = array(
+      $tardis_element_node_types_list = array(
         '#theme' => 'item_list',
         '#type' => 'ul',
-        '#items' => $tardis_block_node_types,
+        '#items' => $tardis_element_node_types,
       );
 
-      $tardis_block_block_link = $tardis_block->block_link;
+      $tardis_element_block_link = $tardis_element->block_link;
 
-      $tardis_blocks_rows[] = array(
-        array('data' => $tardis_block_name),
-        array('data' => $tardis_block_title),
-        array('data' => $tardis_block_node_types_list),
-        array('data' => $tardis_block_block_link),
-        array(
-          'data' => t(
-            '<a href="@edit_link">edit</a> | <a href="@delete_link">delete</a>',
-            array(
-              '@edit_link' => 'tardis/block/edit/' . $tardis_block->name,
-              '@delete_link' => 'tardis/block/delete/' . $tardis_block->name,
-            ),
-          ),
-        ),
+      $tardis_elements_row = array(
+        array('data' => $tardis_element_name),
+        array('data' => $tardis_element_title),
+        array('data' => $tardis_element_node_types_list),
+        array('data' => $tardis_element_block_link),
       );
+
+/**/
+    // If TARDIS Date is enabled, add extra info.
+    (module_exists('tardisdate')) ? $tardis_elements_row[] = array('data' => $tardis_element->tardisdate_field) : '';
+
+    // If TARDIS Internationalization is enabled, add extra info.
+    if (module_exists('tardisi18n')) {
+      // First we retrieve all the languages for this TARDIS from the db.
+      $tardis_element_languages = unserialize($tardis_element->tardisi18n_lang);
+      // Then we remove the ones which are off.
+      foreach ($tardis_element_languages as $key => $value) {
+        if ($tardis_element_languages[$key] === 0) {
+          unset($tardis_element_languages[$key]);
+        }
+      }
+      // And theme results as an HTML item list.
+      $tardis_element_languages_list = array(
+        '#theme' => 'item_list',
+        '#type' => 'ul',
+        '#items' => $tardis_element_languages,
+      );
+
+      $tardis_elements_row[] = array('data' => $tardis_element_languages_list);
+
+    }
+
+      $tardis_elements_row[] = array(
+        'data' => t(
+          '<a href="@edit_link">edit</a> | <a href="@delete_link">delete</a>',
+          array(
+            '@edit_link' => 'tardis/' . $tardis_element_type . '/edit/' . $tardis_element->name,
+            '@delete_link' => 'tardis/' . $tardis_element_type . '/delete/' . $tardis_element->name,
+          )
+        )
+      );
+
+    $tardis_elements_rows[] = $tardis_elements_row;
+/**/
+
     }
   }
   else {
-    $tardis_blocks_header = array(
+    // If none exist, we'll display a message telling users about it.
+    $tardis_elements_header = array(
       array('data' => t('TARDIS blocks')),
     );
 
-    $tardis_blocks_rows[] = array(
+    $tardis_elements_rows[] = array(
       array('data' => t("You haven't created a TARDIS block yet.")),
     );
   }
 
   $form['tardis_blocks_table'] = array(
-    '#title' => t('TARDIS Blocks'),
-    '#markup' => theme('table', array('header' => $tardis_blocks_header, 'rows' => $tardis_blocks_rows)),
+    '#title' => t('TARDIS blocks'),
+    '#markup' => theme('table', array('header' => $tardis_elements_header, 'rows' => $tardis_elements_rows)),
   );
 
+  unset($tardis_elements_row);
+  unset($tardis_elements_rows);
+
   // Here we build a table of available TARDIS pages.
-  // First off we need to get them from the DB - if there's any.
-  $tardis_pages = db_select('tardis_pages', 'tp')
-    ->fields('tp', array(
-      'name',
-      'title',
-      'node_types',
-      'address',
-    ))
+  $tardis_element_type = 'page';
+
+  // First we need to get all, if any, from the DB.
+  $tardis_elements = db_select('tardis_pages', 'tp')
+    ->fields('tp')
     ->orderBy('name', 'ASC')
     ->execute()
     ->fetchAllAssoc('name');
 
-  if (count($tardis_pages) > 0) {
+  if (count($tardis_elements) > 0) {
     // Then we build the table to place them in:
-    $tardis_pages_header = array(
+    $tardis_elements_header = array(
       array('data' => t('Page name')),
       array('data' => t('Title')),
       array('data' => t('Node types')),
       array('data' => t('Address')),
-      array('data' => t('Operations')),
     );
 
-/*
-    array('data' => t('Date field')),
-    array('data' => t('Languages')),
-*/
+/**/
+    // If TARDIS Date is enabled, add an extra column.
+    (module_exists('tardisdate')) ? $tardis_elements_header[] = array('data' => t('Date field')) : '';
 
-    foreach ($tardis_pages as $tardis_page) {
+    // If TARDIS Internationalization is enabled, add an extra column.
+    (module_exists('tardisi18n')) ? $tardis_elements_header[] = array('data' => t('Languages')) : '';
+/**/
+
+    $tardis_elements_header[] = array('data' => t('Operations'));
+
+    foreach ($tardis_elements as $tardis_element) {
       // We build each row using data extracted from the db.
-      $tardis_page_name = $tardis_page->name;
-      $tardis_page_title = $tardis_page->title;
+      $tardis_element_name = $tardis_element->name;
+      $tardis_element_title = $tardis_element->title;
 
       // Node types are stored as an array and, therefore, require some
       // processing. They're in serialized form, which must be unserialized.
       // Then, we remove the ones which are off (zero).
-      $tardis_page_node_types = unserialize($tardis_page->node_types);
-      foreach ($tardis_page_node_types as $key => $value) {
-        if ($tardis_page_node_types[$key] === 0) {
-          unset($tardis_page_node_types[$key]);
+      $tardis_element_node_types = unserialize($tardis_element->node_types);
+      foreach ($tardis_element_node_types as $key => $value) {
+        if ($tardis_element_node_types[$key] === 0) {
+          unset($tardis_element_node_types[$key]);
         }
       }
-      $tardis_page_node_types_list = array(
+      $tardis_element_node_types_list = array(
         '#theme' => 'item_list',
         '#type' => 'ul',
-        '#items' => $tardis_page_node_types,
+        '#items' => $tardis_element_node_types,
       );
 
-      $tardis_page_address = $tardis_page->address;
+      $tardis_element_address = $tardis_element->address;
 
-      $tardis_pages_rows[] = array(
-        array('data' => $tardis_page_name),
-        array('data' => $tardis_page_title),
-        array('data' => $tardis_page_node_types_list),
-        array('data' => $tardis_page_address),
-        array(
-          'data' => t(
-            '<a href="@edit_link">edit</a> | <a href="@delete_link">delete</a>',
-            array(
-              '@edit_link' => 'tardis/page/edit/' . $tardis_page->name,
-              '@delete_link' => 'tardis/page/delete/' . $tardis_page->name,
-            ),
-          ),
-        ),
+      $tardis_elements_row = array(
+        array('data' => $tardis_element_name),
+        array('data' => $tardis_element_title),
+        array('data' => $tardis_element_node_types_list),
+        array('data' => $tardis_element_address),
       );
+
+/**/
+    // If TARDIS Date is enabled, add extra info.
+    (module_exists('tardisdate')) ? $tardis_elements_row[] = array('data' => $tardis_element->tardisdate_field) : '';
+
+    // If TARDIS Internationalization is enabled, add extra info.
+    if (module_exists('tardisi18n')) {
+      // First we retrieve all the languages for this TARDIS from the db.
+      $tardis_element_languages = unserialize($tardis_element->tardisi18n_lang);
+      // Then we remove the ones which are off.
+      foreach ($tardis_element_languages as $key => $value) {
+        if ($tardis_element_languages[$key] === 0) {
+          unset($tardis_element_languages[$key]);
+        }
+      }
+      // And theme results as an HTML item list.
+      $tardis_element_languages_list = array(
+        '#theme' => 'item_list',
+        '#type' => 'ul',
+        '#items' => $tardis_element_languages,
+      );
+
+      $tardis_elements_row[] = array('data' => $tardis_element_languages_list);
+
+    }
+
+      $tardis_elements_row[] = array(
+        'data' => t(
+          '<a href="@edit_link">edit</a> | <a href="@delete_link">delete</a>',
+          array(
+            '@edit_link' => 'tardis/' . $tardis_element_type . '/edit/' . $tardis_element->name,
+            '@delete_link' => 'tardis/' . $tardis_element_type . '/delete/' . $tardis_element->name,
+          )
+        )
+      );
+
+    $tardis_elements_rows[] = $tardis_elements_row;
+/**/
+
     }
   }
   else {
-    $tardis_pages_header = array(
+    // If none exist, we'll display a message telling users about it.
+    $tardis_elements_header = array(
       array('data' => t('TARDIS pages')),
     );
 
-    $tardis_pages_rows[] = array(
+    $tardis_elements_rows[] = array(
       array('data' => t("You haven't created a TARDIS page yet.")),
     );
   }
 
   $form['tardis_pages_table'] = array(
     '#title' => t('TARDIS Pages'),
-    '#markup' => theme('table', array('header' => $tardis_pages_header, 'rows' => $tardis_pages_rows)),
-  );
-
-  // Here's a group to place the TARDIS submodules.
-  // This group will be rendered as a vertical tab group.
-  $form['tardis_general_modules'] = array(
-    '#type' => 'vertical_tabs',
+    '#markup' => theme('table', array('header' => $tardis_elements_header, 'rows' => $tardis_elements_rows)),
   );
 
   return $form;
@@ -193,6 +253,7 @@ function tardis_general_settings($form, &$form_state) {
  * System settings form for TARDIS blocks of recent months.
  *
  * Works for both creating and uptating.
+ * TODO: submodule integrations.
  */
 function tardis_block_settings($form, &$form_state) {
   // Are we creating a new block, or updating an existing one?
@@ -210,7 +271,7 @@ function tardis_block_settings($form, &$form_state) {
   if (isset($query) && count($query) > 1) {
     // If we're editing an existing block, and users change its name,
     // that would create a new block. We must prevent this.
-    $tardis_block_update = $tardis_block_name;
+    $tardis_update = $tardis_block_name;
 
     // Extra precaution against XSS.
     $tardis_block_title = filter_xss($query['title']);
@@ -227,11 +288,28 @@ function tardis_block_settings($form, &$form_state) {
     $tardis_block_year_link = $query['year_link'];
     $tardis_block_month_link = $query['month_link'];
     $tardis_block_block_link = $query['block_link'];
+
+/**/
+    if (module_exists('tardisdate')) {
+      // If TARDIS Date is enabled, check for which date.module field
+      // is in the db - if any.
+      $tardisdate_field = ($query['tardisdate_field'] != '') ? $query['tardisdate_field'] : 'created';
+    }
+/**/
+
+/**/
+    if (module_exists('tardisi18n')) {
+      // If TARDIS Internationalization is enabled, check for languages - which
+      // are stored in serialized form and must be unserialized.
+      $tardisi18n_lang = ($query['tardisi18n_lang'] != '') ? unserialize($query['tardisi18n_lang']) : array('cur_lang' => 'cur_lang');
+    }
+/**/
+
   }
   else {
     // If we're creating a new block, then we must
     // assign default values to fields.
-    $tardis_block_update = 0;
+    $tardis_update = 0;
 
     $tardis_block_name = 'tardis_block';
     $tardis_block_title = 'Recent nodes';
@@ -243,6 +321,21 @@ function tardis_block_settings($form, &$form_state) {
     $tardis_block_year_link = 'normal';
     $tardis_block_month_link = 'names';
     $tardis_block_block_link = '';
+
+/**/
+    if (module_exists('tardisdate')) {
+      // Default value for TARDIS Date field.
+      $tardisdate_field = 'created';
+    }
+/**/
+
+/**/
+    if (module_exists('tardisi18n')) {
+      // Default value for TARDIS Internationalization language.
+      $tardisi18n_lang = array('cur_lang' => 'cur_lang');
+    }
+/**/
+
   }
 
   $form['name'] = array(
@@ -360,9 +453,9 @@ function tardis_block_settings($form, &$form_state) {
   );
 
   // Tell the module whether it's an update or not.
-  $form['update'] = array(
+  $form['tardis_update'] = array(
     '#type' => 'hidden',
-    '#value' => $tardis_block_update,
+    '#value' => $tardis_update,
   );
 
   // The save function works for both TARDIS blocks and pages,
@@ -372,10 +465,36 @@ function tardis_block_settings($form, &$form_state) {
     '#value' => 'tardis_blocks',
   );
 
-  // Validate, submit and redirect functions.
+/**/
+  // If TARDIS Date module is enabled, pass the created or date.module field on.
+  if (module_exists('tardisdate')) {
+    $form['tardisdate_update'] = array(
+      '#type' => 'hidden',
+      '#value' => $tardisdate_field,
+    );
+  }
+/**/
+
+/**/
+  // If TARDIS Internationalization module is enabled,
+  // serialize and pass the languages on.
+  if (module_exists('tardisi18n')) {
+    $form['tardisi18n_update'] = array(
+      '#type' => 'hidden',
+      '#value' => $tardisi18n_lang,
+    );
+  }
+/**/
+
+  // Validate and submit functions.
   $form['#validate'][] = 'tardis_block_settings_validate';
   $form['#submit'][] = 'tardis_settings_submit';
-  $form['#redirect'] = 'admin/structure/tardis';
+
+  // Here's a group to place the TARDIS submodules.
+  // This group will be rendered as a vertical tab group.
+  $form['tardis_submodules'] = array(
+    '#type' => 'vertical_tabs',
+  );
 
   return (system_settings_form($form));
 }
@@ -407,67 +526,10 @@ function tardis_block_settings_validate($form, &$form_state) {
 }
 
 /**
- * Deletion confirmation form.
- */
-function tardis_delete_confirm($form, &$form_state) {
-  // First off, are we deleting a block or a page?
-  $tardis_table = 'tardis_' . arg(3) . 's';
-  // And which one is it?
-  $tardis_name = arg(5);
-
-  // We must check if a name has been provided:
-  if (!is_null($tardis_name)) {
-    $query = db_select($tardis_table, 't')
-      ->fields('t', array('name'))
-      ->condition('name', $tardis_name)
-      ->execute()
-      ->fetchAssoc();
-  }
-
-  // And if a block or page with that name exists:
-  if (count($query) > 0) {
-    // Extra precaution against XSS.
-    $tardis_name = filter_xss($query['name']);
-
-    $form_state['table'] = $tardis_table;
-    $form_state['name'] = $tardis_name;
-
-    // The confirm_form function (part of Drupal Core) creates a
-    // confirmation step before deletion.
-    return confirm_form(
-      $form,
-      t('Are you sure you want to delete <em>@tardis_name?</em>', array('@tardis_name' => $tardis_name)),
-      'admin/structure/tardis'
-    );
-  }
-  else {
-    return drupal_access_denied();
-  }
-}
-
-/**
- * Deletion form.
- */
-function tardis_delete_confirm_submit($form, &$form_state) {
-  // These are values passed by the confirmation step:
-  $tardis_table = $form_state['table'];
-  $tardis_name = $form_state['name'];
-
-  // And this is a helper function that removes records from the TARDIS tables.
-  _tardis_delete($tardis_table, $tardis_name);
-
-  // But before we display a confirmation message, there's some XSS cleanup.
-  $tardis_target = filter_xss($tardis_name);
-  drupal_set_message(t('<em>@tardis_name</em> deleted successfully.', array('@tardis_name' => $tardis_name)));
-
-  // And back to the TARDIS admin page.
-  drupal_goto('admin/structure/tardis');
-}
-
-/**
  * System settings form for TARDIS pages of recent nodes.
  *
  * Works for both creating and uptating.
+ * TODO: submodule integrations.
  */
 function tardis_page_settings($form, &$form_state) {
   // Are we creating a new page, or updating an existing one?
@@ -485,7 +547,7 @@ function tardis_page_settings($form, &$form_state) {
   if (isset($query) && count($query) > 1) {
     // If we're editing an existing page, and users change its name,
     // that would create a new page. We must prevent this.
-    $tardis_page_update = $tardis_page_name;
+    $tardis_update = $tardis_page_name;
 
     // TARDIS page address.
     $tardis_page_address = $query['address'];
@@ -505,6 +567,23 @@ function tardis_page_settings($form, &$form_state) {
 
     // How many nodes per TARDIS page.
     $tardis_page_nodes_per_page = $query['nodes_per_page'];
+
+/**/
+    if (module_exists('tardisdate')) {
+      // If TARDIS Date is enabled, check for which date.module field
+      // is in the db - if any.
+      $tardisdate_field = ($query['tardisdate_field'] != '') ? $query['tardisdate_field'] : 'created';
+    }
+/**/
+
+/**/
+    if (module_exists('tardisi18n')) {
+      // If TARDIS Internationalization is enabled, check for languages - which
+      // are stored in serialized form and must be unserialized.
+      $tardisi18n_lang = ($query['tardisi18n_lang'] != '') ? unserialize($query['tardisi18n_lang']) : array('cur_lang' => 'cur_lang');
+    }
+/**/
+
   }
   else {
     // If we're creating a new page, then we must
@@ -518,6 +597,21 @@ function tardis_page_settings($form, &$form_state) {
     $tardis_page_current_month = 0;
     $tardis_page_node_types = array('page');
     $tardis_page_nodes_per_page = 10;
+
+/**/
+    if (module_exists('tardisdate')) {
+      // Default value for TARDIS Date field.
+      $tardisdate_field = 'created';
+    }
+/**/
+
+/**/
+    if (module_exists('tardisi18n')) {
+      // Default value for TARDIS Internationalization language.
+      $tardisi18n_lang = array('cur_lang' => 'cur_lang');
+    }
+/**/
+
   }
 
   $form['name'] = array(
@@ -594,9 +688,9 @@ function tardis_page_settings($form, &$form_state) {
   );
 
   // Tell the module whether it's an update or not.
-  $form['update'] = array(
+  $form['tardis_update'] = array(
     '#type' => 'hidden',
-    '#value' => $tardis_page_update,
+    '#value' => $tardis_update,
   );
 
   // The save function works for both TARDIS blocks and pages,
@@ -606,10 +700,36 @@ function tardis_page_settings($form, &$form_state) {
     '#value' => 'tardis_pages',
   );
 
-  // Validate, submit and redirect functions.
+/**/
+  // If TARDIS Date module is enabled, pass the created or date.module field on.
+  if (module_exists('tardisdate')) {
+    $form['tardisdate_update'] = array(
+      '#type' => 'hidden',
+      '#value' => $tardisdate_field,
+    );
+  }
+/**/
+
+/**/
+  // If TARDIS Internationalization module is enabled,
+  // serialize and pass the languages on.
+  if (module_exists('tardisi18n')) {
+    $form['tardisi18n_update'] = array(
+      '#type' => 'hidden',
+      '#value' => $tardisi18n_lang,
+    );
+  }
+/**/
+
+  // Here's a group to place the TARDIS submodules.
+  // This group will be rendered as a vertical tab group.
+  $form['tardis_submodules'] = array(
+    '#type' => 'vertical_tabs',
+  );
+
+  // Validate and submit functions.
   $form['#validate'][] = 'tardis_page_settings_validate';
   $form['#submit'][] = 'tardis_settings_submit';
-  $form['#redirect'] = 'admin/structure/tardis';
 
   return (system_settings_form($form));
 }
@@ -642,7 +762,7 @@ function tardis_page_settings_validate($form, &$form_state) {
     ->execute()
     ->fetchAllAssoc('name');
 
-  // Comparison between old and new values.
+  // Comparison between old and new values for page address and title.
   if (isset($tardis_page[$tardis_page_name])) {
     $tardis_page_new_title = $tardis_page[$tardis_page_name]->title;
     $tardis_page_new_address = $tardis_page[$tardis_page_name]->address;
@@ -651,6 +771,7 @@ function tardis_page_settings_validate($form, &$form_state) {
     $tardis_page_new_title = '';
     $tardis_page_new_address = '';
   }
+  // If the page address or title are different, users must clear their cache.
   if ($tardis_page_address != $tardis_page_new_address || $tardis_page_title != $tardis_page_new_title) {
     drupal_set_message(t("Don't forget to <a href='/admin/config/development/performance'>clear your cache.</a>"));
   }
@@ -670,6 +791,14 @@ function tardis_settings_submit($form, &$form_state) {
   // node types - or else, they'll be saved as the word "Array".
   // We do that by serializing the array.
   $form_state['values']['node_types'] = serialize($form_state['values']['node_types']);
+
+/**/
+  if (module_exists('tardisi18n')) {
+    // If TARDIS Internationalization is enabled,
+    // serialize languages array before saving.
+    $form_state['values']['tardisi18n_lang'] = serialize($form_state['values']['tardisi18n_lang']);
+  }
+/**/
 
   // We turn the values entered in the form into an object...
   $tardis_values = (object) $form_state['values'];
@@ -693,4 +822,62 @@ function tardis_settings_submit($form, &$form_state) {
 
   // And back to the TARDIS admin page.
   $form_state['redirect'] = 'admin/structure/tardis';
+}
+
+/**
+ * Deletion form.
+ */
+function tardis_delete_confirm($form, &$form_state) {
+  // First off, are we deleting a block or a page?
+  $tardis_table = 'tardis_' . arg(3) . 's';
+  // And which one is it?
+  $tardis_name = arg(5);
+
+  // We must check if a name has been provided:
+  if (!is_null($tardis_name)) {
+    $query = db_select($tardis_table, 't')
+      ->fields('t', array('name'))
+      ->condition('name', $tardis_name)
+      ->execute()
+      ->fetchAssoc();
+  }
+
+  // And if a block or page with that name exists:
+  if (count($query) > 0) {
+    // Extra precaution against XSS.
+    $tardis_name = filter_xss($query['name']);
+
+    $form_state['table'] = $tardis_table;
+    $form_state['name'] = $tardis_name;
+
+    // The confirm_form function (part of Drupal Core) creates a
+    // confirmation step before deletion.
+    return confirm_form(
+      $form,
+      t('Are you sure you want to delete <em>@tardis_name?</em>', array('@tardis_name' => $tardis_name)),
+      'admin/structure/tardis'
+    );
+  }
+  else {
+    return drupal_access_denied();
+  }
+}
+
+/**
+ * Deletion confirmation form.
+ */
+function tardis_delete_confirm_submit($form, &$form_state) {
+  // These are values passed by the confirmation step:
+  $tardis_table = $form_state['table'];
+  $tardis_name = $form_state['name'];
+
+  // And this is a helper function that removes records from the TARDIS tables.
+  _tardis_delete($tardis_table, $tardis_name);
+
+  // But before we display a confirmation message, there's some XSS cleanup.
+  $tardis_target = filter_xss($tardis_name);
+  drupal_set_message(t('<em>@tardis_name</em> deleted successfully.', array('@tardis_name' => $tardis_name)));
+
+  // And back to the TARDIS admin page.
+  drupal_goto('admin/structure/tardis');
 }
