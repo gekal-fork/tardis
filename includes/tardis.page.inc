@@ -20,36 +20,17 @@ function tardis_page($tardis_page_name) {
     ->fields('tp')
     ->condition('name', $tardis_page_name)
     ->execute()
-    ->fetchAssoc('name');
+    ->fetchObject();
 
   // Those are the page settings as retrieved from the db:
-  $name = $tardis_page['name'];
-  $title_date = $tardis_page['title_date'];
-  $nodes_per_page = $tardis_page['nodes_per_page'];
+  $name = $tardis_page->name;
+  $title_date = $tardis_page->title_date;
+  $nodes_per_page = $tardis_page->nodes_per_page;
   // Node types are stored in serialized form and must be unserialized.
-  $node_types = unserialize($tardis_page['node_types']);
+  $node_types = unserialize($tardis_page->node_types);
 
-/**/
-        // If TARDIS Date module is on, fetch the date field used in the query.
-        if (module_exists('tardisdate')) {
-          $tardisdate_field = ($tardis_page['tardisdate_field'] != '') ? $tardis_page['tardisdate_field'] : 'created';
-        }
-        else {
-          $tardisdate_field = '';
-        }
-/**/
-
-/**/
-        // If TARDIS Internationalization is on, fetch the query language.
-        // There might be no language yet, so we need a default value.
-        // Also the language is an array, which is stored in serialized form.
-        if (module_exists('tardisi18n')) {
-          $tardisi18n_lang = ($tardis_page['tardisi18n_lang'] != '') ? unserialize($tardis_page['tardisi18n_lang']) : array('cur_lang' => 'cur_lang');
-        }
-        else {
-          $tardisi18n_lang = '';
-        }
-/**/
+  // Fetch fields used by submodules in the query.
+  _tardis_submodule_fields($tardis_page, $tardisdate_field, $tardisi18n_lang);
 
   // How did the user choose to append the current date to the page title?
   $tardis_page_title_date = $title_date;
@@ -139,32 +120,8 @@ function _tardis_query_page($nodes_per_page, $node_types, $tardisdate_field, $ta
     ->condition('type', $node_types)
     ->limit($nodes_per_page);
 
-/**/
-  // TARDIS Internationalization query join.
-  // Allows TARDIS Internationalization to change the query, restricting it
-  // to nodes that are in a certain language.
-  if (module_exists('tardisi18n')) {
-    _tardisi18n_join_query($query, $tardisi18n_lang);
-  }
-  else {
-    $tardisi18n_lang = '';
-  }
-/**/
-
-/**/
-  // TARDIS Date query join.
-  // Allows TARDIS Date to change the query, restricting it to nodes that
-  // have a certain date.module field.
-  if (module_exists('tardisdate')) {
-    _tardisdate_join_query($query, $tardisdate_field);
-
-    // Check for any date.module field that might change the query.
-    $tardis_query_date = $tardisdate_field;
-  }
-  else {
-    $tardis_query_date = 'created';
-  }
-/**/
+  // Query joins made by submodules.
+  _tardis_submodule_query_joins($query, $tardisi18n_lang, $tardisdate_field, $tardis_query_date);
 
   if (!module_exists('tardisdate')) {
     // If TARDIS Date is disabled,  order the query by the default created date.
@@ -197,23 +154,8 @@ function _tardis_query_page($nodes_per_page, $node_types, $tardisdate_field, $ta
       $tardis_query_date_max = $tardis_query_year . '-12-31';
     }
 
-/**/
-    if (module_exists('tardisdate') && $tardis_query_date != 'created') {
-      // date.module fields are stored as YYYY-MM-DD HH:MM:SS
-      // and need no conversion.
-      $tardis_query_date .= '_value';
-    }
-    else {
-      // Base table Created fields are stored as timestamps
-      // and need to be converted.
-      $tardis_query_date_min = strtotime($tardis_query_date_min);
-      $tardis_query_date_max = strtotime($tardis_query_date_max);
-    }
-
-    // So if the URL supplies one or two valid arguments, let's use them
-    // to filter only nodes from a given year and month (if applicable).
-    $query->condition($tardis_query_date, array($tardis_query_date_min, $tardis_query_date_max), 'BETWEEN');
-/**/
+    // Determines whether date.module fields should be used.
+    _tardisdate_query_dates ($query, $tardis_query_date, $tardis_query_date_min, $tardis_query_date_max);
   }
 
   return $query->execute()->fetchAllAssoc('nid');

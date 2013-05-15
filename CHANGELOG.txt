@@ -1,6 +1,13 @@
 TARDIS: Changelog
 =================
 
+7.x-2.0, 2013-05-14
+-------------------
+On this new version, TARDIS gives users the ability to create multiple blocks
+and pages. Naturally, submodules TARDIS Date and TARDIS Internationalization
+also benefit from this upgrade: there's Date and Internationalization for each,
+separately.
+
 7.x-1.2, 2013-04-11
 -------------------
 Third stable release. TARDIS has a second submodule, TARDIS Date. Fixed some

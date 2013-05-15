@@ -227,27 +227,8 @@ function tardis_block_view($delta = '') {
         $year_link = $tardis_block->year_link;
         $month_link = $tardis_block->month_link;
 
-/**/
-        // If TARDIS Date module is on, fetch the date field used in the query.
-        if (module_exists('tardisdate')) {
-          $tardisdate_field = ($tardis_block->tardisdate_field != '') ? $tardis_block->tardisdate_field : 'created';
-        }
-        else {
-          $tardisdate_field = '';
-        }
-/**/
-
-/**/
-        // If TARDIS Internationalization is on, fetch the query language.
-        // There might be no language yet, so we need a default value.
-        // Also the language is an array, which is stored in serialized form.
-        if (module_exists('tardisi18n')) {
-          $tardisi18n_lang = ($tardis_block->tardisi18n_lang != '') ? unserialize($tardis_block->tardisi18n_lang) : array('cur_lang' => 'cur_lang');
-        }
-        else {
-          $tardisi18n_lang = '';
-        }
-/**/
+        // Fetch fields used by submodules in the query.
+        _tardis_submodule_fields($tardis_block, $tardisdate_field, $tardisi18n_lang);
 
         // Build the query that returns a list of TARDIS links.
         $information = _tardis_query_block($past_months, $node_types, $stop_year, $current_month, $block_link, $year_link, $month_link, $tardisdate_field, $tardisi18n_lang);
@@ -425,50 +406,11 @@ function _tardis_query_block($past_months, $node_types, $stop_year, $current_mon
       ->condition('type', $tardis_block_node_types)
       ->range(0, 1);
 
-/**/
-    // TARDIS Internationalization query join.
-    // Allows TARDIS Internationalization to change the query, restricting it
-    // to nodes that are in a certain language.
-    if (module_exists('tardisi18n')) {
-      _tardisi18n_join_query($query, $tardisi18n_lang);
-    }
-    else {
-      $tardisi18n_lang = '';
-    }
-/**/
+    // Query joins made by submodules.
+    _tardis_submodule_query_joins($query, $tardisi18n_lang, $tardisdate_field, $tardis_query_date);
 
-/**/
-    // TARDIS Date query join.
-    // Allows TARDIS Date to change the query, restricting it to nodes that
-    // have a certain date.module field.
-    if (module_exists('tardisdate')) {
-      _tardisdate_join_query($query, $tardisdate_field);
-
-      // Check for any date.module field that might change the query.
-      $tardis_query_date = $tardisdate_field;
-    }
-    else {
-      $tardis_query_date = 'created';
-    }
-/**/
-
-/**/
-    if (module_exists('tardisdate') && $tardis_query_date != 'created') {
-      // date.module fields are stored as YYYY-MM-DD HH:MM:SS
-      // and need no conversion.
-      $tardis_query_date .= '_value';
-    }
-    else {
-      // Base table Created fields are stored as timestamps
-      // and need to be converted.
-      $tardis_query_date_min = strtotime($tardis_query_date_min);
-      $tardis_query_date_max = strtotime($tardis_query_date_max);
-    }
-
-    // So if the URL supplies one or two valid arguments, let's use them
-    // to filter only nodes from a given year and month (if applicable).
-    $query->condition($tardis_query_date, array($tardis_query_date_min, $tardis_query_date_max), 'BETWEEN');
-/**/
+    // Determines whether date.module fields should be used.
+    _tardisdate_query_dates($query, $tardis_query_date, $tardis_query_date_min, $tardis_query_date_max);
 
     $result = $query->execute()->fetchAllAssoc('nid');
 
@@ -546,7 +488,7 @@ function _tardis_query_block($past_months, $node_types, $stop_year, $current_mon
 }
 
 /**
- * Helper functions
+ * TARDIS helper functions
  */
 
 /**
@@ -655,4 +597,81 @@ function _tardis_month_names() {
   );
 
   return $tardis_month_names;
+}
+
+/**
+ * TARDIS submodules helper function.
+ *
+ * Determines whether date.module fields should be used in queries.
+ */
+function _tardisdate_query_dates ($query, $tardis_query_date, $tardis_query_date_min, $tardis_query_date_max) {
+  if (module_exists('tardisdate') && $tardis_query_date != 'created') {
+    // date.module fields are stored as YYYY-MM-DD HH:MM:SS
+    // and need no conversion.
+    $tardis_query_date .= '_value';
+  }
+  else {
+    // Base table Created fields are stored as timestamps
+    // and need to be converted.
+    $tardis_query_date_min = strtotime($tardis_query_date_min);
+    $tardis_query_date_max = strtotime($tardis_query_date_max);
+  }
+
+  // So if the URL supplies one or two valid arguments, let's use them
+  // to filter only nodes from a given year and month (if applicable).
+  $query->condition($tardis_query_date, array($tardis_query_date_min, $tardis_query_date_max), 'BETWEEN');
+}
+
+/**
+ * TARDIS submodules helper function.
+ *
+ * Fetches fields used by submodules in the query.
+ */
+function _tardis_submodule_fields ($tardis_object, &$tardisdate_field, &$tardisi18n_lang) {
+  // If TARDIS Date module is on, fetch the date field used in the query.
+  if (module_exists('tardisdate')) {
+    $tardisdate_field = ($tardis_object->tardisdate_field != '') ? $tardis_object->tardisdate_field : 'created';
+  }
+  else {
+    $tardisdate_field = 'created';
+  }
+  // If TARDIS Internationalization is on, fetch the query language.
+  // There might be no language yet, so we need a default value.
+  // Also the language is an array, which is stored in serialized form.
+  if (module_exists('tardisi18n')) {
+    $tardisi18n_lang = ($tardis_object->tardisi18n_lang != '') ? unserialize($tardis_object->tardisi18n_lang) : array('cur_lang' => 'cur_lang');
+  }
+  else {
+    $tardisi18n_lang = '';
+  }
+}
+
+/**
+ * TARDIS submodules helper function.
+ *
+ * Query joins made by submodules.
+ */
+function _tardis_submodule_query_joins ($query, $tardisi18n_lang, $tardisdate_field, &$tardis_query_date) {
+  // TARDIS Internationalization query join.
+  // Allows TARDIS Internationalization to change the query, restricting it
+  // to nodes that are in a certain language.
+  if (module_exists('tardisi18n')) {
+    _tardisi18n_join_query($query, $tardisi18n_lang);
+  }
+  else {
+    $tardisi18n_lang = '';
+  }
+
+  // TARDIS Date query join.
+  // Allows TARDIS Date to change the query, restricting it to nodes that
+  // have a certain date.module field.
+  if (module_exists('tardisdate')) {
+    _tardisdate_join_query($query, $tardisdate_field);
+
+    // Check for any date.module field that might change the query.
+    $tardis_query_date = $tardisdate_field;
+  }
+  else {
+    $tardis_query_date = 'created';
+  }
 }

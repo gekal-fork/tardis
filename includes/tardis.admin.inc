@@ -34,13 +34,8 @@ function tardis_overview($form, &$form_state) {
       array('data' => t('Link')),
     );
 
-/**/
-    // If TARDIS Date is enabled, add an extra column.
-    (module_exists('tardisdate')) ? $tardis_elements_header[] = array('data' => t('Date field')) : '';
-
-    // If TARDIS Internationalization is enabled, add an extra column.
-    (module_exists('tardisi18n')) ? $tardis_elements_header[] = array('data' => t('Languages')) : '';
-/**/
+    // Create extra table headers when submodules are on.
+    _tardis_submodules_extra_headers ($tardis_elements_header);
 
     $tardis_elements_header[] = array('data' => t('Operations'));
 
@@ -73,43 +68,8 @@ function tardis_overview($form, &$form_state) {
         array('data' => $tardis_element_block_link),
       );
 
-/**/
-    // If TARDIS Date is enabled, add extra info.
-    (module_exists('tardisdate')) ? $tardis_elements_row[] = array('data' => $tardis_element->tardisdate_field) : '';
-
-    // If TARDIS Internationalization is enabled, add extra info.
-    if (module_exists('tardisi18n')) {
-      // First we retrieve all the languages for this TARDIS from the db.
-      $tardis_element_languages = unserialize($tardis_element->tardisi18n_lang);
-      // Then we remove the ones which are off.
-      foreach ($tardis_element_languages as $key => $value) {
-        if ($tardis_element_languages[$key] === 0) {
-          unset($tardis_element_languages[$key]);
-        }
-      }
-      // And theme results as an HTML item list.
-      $tardis_element_languages_list = array(
-        '#theme' => 'item_list',
-        '#type' => 'ul',
-        '#items' => $tardis_element_languages,
-      );
-
-      $tardis_elements_row[] = array('data' => $tardis_element_languages_list);
-
-    }
-
-      $tardis_elements_row[] = array(
-        'data' => t(
-          '<a href="@edit_link">edit</a> | <a href="@delete_link">delete</a>',
-          array(
-            '@edit_link' => 'tardis/' . $tardis_element_type . '/edit/' . $tardis_element->name,
-            '@delete_link' => 'tardis/' . $tardis_element_type . '/delete/' . $tardis_element->name,
-          )
-        )
-      );
-
-    $tardis_elements_rows[] = $tardis_elements_row;
-/**/
+    // Add extra table info when submodules are on.
+    _tardis_submodules_extra_info (&$tardis_elements_rows, &$tardis_elements_row, $tardis_element, 'block');
 
     }
   }
@@ -151,14 +111,9 @@ function tardis_overview($form, &$form_state) {
       array('data' => t('Address')),
     );
 
-/**/
-    // If TARDIS Date is enabled, add an extra column.
-    (module_exists('tardisdate')) ? $tardis_elements_header[] = array('data' => t('Date field')) : '';
+    _tardis_submodules_extra_headers ($tardis_elements_header);
 
-    // If TARDIS Internationalization is enabled, add an extra column.
-    (module_exists('tardisi18n')) ? $tardis_elements_header[] = array('data' => t('Languages')) : '';
-/**/
-
+    // Create extra table headers when submodules are on.
     $tardis_elements_header[] = array('data' => t('Operations'));
 
     foreach ($tardis_elements as $tardis_element) {
@@ -190,43 +145,8 @@ function tardis_overview($form, &$form_state) {
         array('data' => $tardis_element_address),
       );
 
-/**/
-    // If TARDIS Date is enabled, add extra info.
-    (module_exists('tardisdate')) ? $tardis_elements_row[] = array('data' => $tardis_element->tardisdate_field) : '';
-
-    // If TARDIS Internationalization is enabled, add extra info.
-    if (module_exists('tardisi18n')) {
-      // First we retrieve all the languages for this TARDIS from the db.
-      $tardis_element_languages = unserialize($tardis_element->tardisi18n_lang);
-      // Then we remove the ones which are off.
-      foreach ($tardis_element_languages as $key => $value) {
-        if ($tardis_element_languages[$key] === 0) {
-          unset($tardis_element_languages[$key]);
-        }
-      }
-      // And theme results as an HTML item list.
-      $tardis_element_languages_list = array(
-        '#theme' => 'item_list',
-        '#type' => 'ul',
-        '#items' => $tardis_element_languages,
-      );
-
-      $tardis_elements_row[] = array('data' => $tardis_element_languages_list);
-
-    }
-
-      $tardis_elements_row[] = array(
-        'data' => t(
-          '<a href="@edit_link">edit</a> | <a href="@delete_link">delete</a>',
-          array(
-            '@edit_link' => 'tardis/' . $tardis_element_type . '/edit/' . $tardis_element->name,
-            '@delete_link' => 'tardis/' . $tardis_element_type . '/delete/' . $tardis_element->name,
-          )
-        )
-      );
-
-    $tardis_elements_rows[] = $tardis_elements_row;
-/**/
+    // Add extra table info when submodules are on.
+    _tardis_submodules_extra_info (&$tardis_elements_rows, &$tardis_elements_row, $tardis_element, 'page');
 
     }
   }
@@ -253,7 +173,6 @@ function tardis_overview($form, &$form_state) {
  * System settings form for TARDIS blocks of recent months.
  *
  * Works for both creating and uptating.
- * TODO: submodule integrations.
  */
 function tardis_block_settings($form, &$form_state) {
   // Are we creating a new block, or updating an existing one?
@@ -289,22 +208,8 @@ function tardis_block_settings($form, &$form_state) {
     $tardis_block_month_link = $query['month_link'];
     $tardis_block_block_link = $query['block_link'];
 
-/**/
-    if (module_exists('tardisdate')) {
-      // If TARDIS Date is enabled, check for which date.module field
-      // is in the db - if any.
-      $tardisdate_field = ($query['tardisdate_field'] != '') ? $query['tardisdate_field'] : 'created';
-    }
-/**/
-
-/**/
-    if (module_exists('tardisi18n')) {
-      // If TARDIS Internationalization is enabled, check for languages - which
-      // are stored in serialized form and must be unserialized.
-      $tardisi18n_lang = ($query['tardisi18n_lang'] != '') ? unserialize($query['tardisi18n_lang']) : array('cur_lang' => 'cur_lang');
-    }
-/**/
-
+    // Retrieve TARDIS submodules' values.
+    _tardis_submodules_values ($query, $tardisdate_field, $tardisi18n_lang);
   }
   else {
     // If we're creating a new block, then we must
@@ -322,20 +227,8 @@ function tardis_block_settings($form, &$form_state) {
     $tardis_block_month_link = 'names';
     $tardis_block_block_link = '';
 
-/**/
-    if (module_exists('tardisdate')) {
-      // Default value for TARDIS Date field.
-      $tardisdate_field = 'created';
-    }
-/**/
-
-/**/
-    if (module_exists('tardisi18n')) {
-      // Default value for TARDIS Internationalization language.
-      $tardisi18n_lang = array('cur_lang' => 'cur_lang');
-    }
-/**/
-
+    // Set default values for TARDIS submodules.
+    _tardis_submodules_default_values ($tardisdate_field, $tardisi18n_lang);
   }
 
   $form['name'] = array(
@@ -465,26 +358,8 @@ function tardis_block_settings($form, &$form_state) {
     '#value' => 'tardis_blocks',
   );
 
-/**/
-  // If TARDIS Date module is enabled, pass the created or date.module field on.
-  if (module_exists('tardisdate')) {
-    $form['tardisdate_update'] = array(
-      '#type' => 'hidden',
-      '#value' => $tardisdate_field,
-    );
-  }
-/**/
-
-/**/
-  // If TARDIS Internationalization module is enabled,
-  // serialize and pass the languages on.
-  if (module_exists('tardisi18n')) {
-    $form['tardisi18n_update'] = array(
-      '#type' => 'hidden',
-      '#value' => $tardisi18n_lang,
-    );
-  }
-/**/
+  // Pass update information on.
+  _tardis_submodules_update_info (&$form, $tardisdate_field, $tardisi18n_lang);
 
   // Validate and submit functions.
   $form['#validate'][] = 'tardis_block_settings_validate';
@@ -568,27 +443,13 @@ function tardis_page_settings($form, &$form_state) {
     // How many nodes per TARDIS page.
     $tardis_page_nodes_per_page = $query['nodes_per_page'];
 
-/**/
-    if (module_exists('tardisdate')) {
-      // If TARDIS Date is enabled, check for which date.module field
-      // is in the db - if any.
-      $tardisdate_field = ($query['tardisdate_field'] != '') ? $query['tardisdate_field'] : 'created';
-    }
-/**/
-
-/**/
-    if (module_exists('tardisi18n')) {
-      // If TARDIS Internationalization is enabled, check for languages - which
-      // are stored in serialized form and must be unserialized.
-      $tardisi18n_lang = ($query['tardisi18n_lang'] != '') ? unserialize($query['tardisi18n_lang']) : array('cur_lang' => 'cur_lang');
-    }
-/**/
-
+    // Retrieve TARDIS submodules' values.
+    _tardis_submodules_values ($query, $tardisdate_field, $tardisi18n_lang);
   }
   else {
     // If we're creating a new page, then we must
     // assign default values to fields.
-    $tardis_page_update = 0;
+    $tardis_update = 0;
 
     $tardis_page_name = 'tardis_page';
     $tardis_page_address = 'recent/nodes';
@@ -598,20 +459,8 @@ function tardis_page_settings($form, &$form_state) {
     $tardis_page_node_types = array('page');
     $tardis_page_nodes_per_page = 10;
 
-/**/
-    if (module_exists('tardisdate')) {
-      // Default value for TARDIS Date field.
-      $tardisdate_field = 'created';
-    }
-/**/
-
-/**/
-    if (module_exists('tardisi18n')) {
-      // Default value for TARDIS Internationalization language.
-      $tardisi18n_lang = array('cur_lang' => 'cur_lang');
-    }
-/**/
-
+    // Set default values for TARDIS submodules.
+    _tardis_submodules_default_values ($tardisdate_field, $tardisi18n_lang);
   }
 
   $form['name'] = array(
@@ -700,26 +549,8 @@ function tardis_page_settings($form, &$form_state) {
     '#value' => 'tardis_pages',
   );
 
-/**/
-  // If TARDIS Date module is enabled, pass the created or date.module field on.
-  if (module_exists('tardisdate')) {
-    $form['tardisdate_update'] = array(
-      '#type' => 'hidden',
-      '#value' => $tardisdate_field,
-    );
-  }
-/**/
-
-/**/
-  // If TARDIS Internationalization module is enabled,
-  // serialize and pass the languages on.
-  if (module_exists('tardisi18n')) {
-    $form['tardisi18n_update'] = array(
-      '#type' => 'hidden',
-      '#value' => $tardisi18n_lang,
-    );
-  }
-/**/
+  // Pass update information on.
+  _tardis_submodules_update_info (&$form, $tardisdate_field, $tardisi18n_lang);
 
   // Here's a group to place the TARDIS submodules.
   // This group will be rendered as a vertical tab group.
@@ -792,13 +623,11 @@ function tardis_settings_submit($form, &$form_state) {
   // We do that by serializing the array.
   $form_state['values']['node_types'] = serialize($form_state['values']['node_types']);
 
-/**/
   if (module_exists('tardisi18n')) {
     // If TARDIS Internationalization is enabled,
     // serialize languages array before saving.
     $form_state['values']['tardisi18n_lang'] = serialize($form_state['values']['tardisi18n_lang']);
   }
-/**/
 
   // We turn the values entered in the form into an object...
   $tardis_values = (object) $form_state['values'];
@@ -880,4 +709,121 @@ function tardis_delete_confirm_submit($form, &$form_state) {
 
   // And back to the TARDIS admin page.
   drupal_goto('admin/structure/tardis');
+}
+
+/**
+ * TARDIS submodules helper function.
+ *
+ * Creates extra table headers when submodules are on.
+ */
+function _tardis_submodules_extra_headers (&$tardis_elements_header) {
+  // If TARDIS Date is enabled, add an extra column.
+  (module_exists('tardisdate')) ? $tardis_elements_header[] = array('data' => t('Date field')) : '';
+
+  // If TARDIS Internationalization is enabled, add an extra column.
+  (module_exists('tardisi18n')) ? $tardis_elements_header[] = array('data' => t('Languages')) : '';
+}
+
+/**
+ * TARDIS submodules helper function.
+ *
+ * Adds extra table info when submodules are on.
+ */
+function _tardis_submodules_extra_info (&$tardis_elements_rows, &$tardis_elements_row, $tardis_element, $tardis_element_type) {
+  // If TARDIS Date is enabled, add extra info.
+  (module_exists('tardisdate')) ? $tardis_elements_row[] = array('data' => $tardis_element->tardisdate_field) : '';
+
+  // If TARDIS Internationalization is enabled, add extra info.
+  if (module_exists('tardisi18n')) {
+    // First we retrieve all the languages for this TARDIS from the db,
+    // if any.
+    $tardis_element_languages = ($tardis_element->tardisi18n_lang != '') ? unserialize($tardis_element->tardisi18n_lang) : array('cur_lang' => 0);
+    // Then we remove the ones which are off.
+    foreach ($tardis_element_languages as $key => $value) {
+      if ($tardis_element_languages[$key] === 0) {
+        unset($tardis_element_languages[$key]);
+      }
+    }
+    // And theme results as an HTML item list.
+    $tardis_element_languages_list = array(
+      '#theme' => 'item_list',
+      '#type' => 'ul',
+      '#items' => $tardis_element_languages,
+    );
+
+    $tardis_elements_row[] = array('data' => $tardis_element_languages_list);
+
+  }
+
+    $tardis_elements_row[] = array(
+      'data' => t(
+        '<a href="@edit_link">edit</a> | <a href="@delete_link">delete</a>',
+        array(
+          '@edit_link' => 'tardis/' . $tardis_element_type . '/edit/' . $tardis_element->name,
+          '@delete_link' => 'tardis/' . $tardis_element_type . '/delete/' . $tardis_element->name,
+        )
+      )
+    );
+
+  $tardis_elements_rows[] = $tardis_elements_row;
+}
+
+/**
+ * TARDIS submodules helper function.
+ *
+ * Retrieves TARDIS submodules' values.
+ */
+function _tardis_submodules_values ($query, &$tardisdate_field, &$tardisi18n_lang) {
+  if (module_exists('tardisdate')) {
+    // If TARDIS Date is enabled, check for which date.module field
+    // is in the db - if any.
+    $tardisdate_field = ($query['tardisdate_field'] != '') ? $query['tardisdate_field'] : 'created';
+  }
+
+  if (module_exists('tardisi18n')) {
+    // If TARDIS Internationalization is enabled, check for languages - which
+    // are stored in serialized form and must be unserialized.
+    $tardisi18n_lang = ($query['tardisi18n_lang'] != '') ? unserialize($query['tardisi18n_lang']) : array('cur_lang' => 'cur_lang');
+  }
+}
+
+/**
+ * TARDIS submodules helper function.
+ *
+ * Sets default values for TARDIS submodules.
+ */
+function _tardis_submodules_default_values (&$tardisdate_field, &$tardisi18n_lang) {
+  if (module_exists('tardisdate')) {
+    // Default value for TARDIS Date field.
+    $tardisdate_field = 'created';
+  }
+
+  if (module_exists('tardisi18n')) {
+    // Default value for TARDIS Internationalization language.
+    $tardisi18n_lang = array('cur_lang' => 'cur_lang');
+  }
+}
+
+/**
+ * TARDIS submodules helper function.
+ *
+ * Passes update information on.
+ */
+function _tardis_submodules_update_info (&$form, $tardisdate_field, $tardisi18n_lang) {
+  // If TARDIS Date module is enabled, pass the created or date.module field on.
+  if (module_exists('tardisdate')) {
+    $form['tardisdate_update'] = array(
+      '#type' => 'hidden',
+      '#value' => $tardisdate_field,
+    );
+  }
+
+  // If TARDIS Internationalization module is enabled,
+  // serialize and pass the languages on.
+  if (module_exists('tardisi18n')) {
+    $form['tardisi18n_update'] = array(
+      '#type' => 'hidden',
+      '#value' => $tardisi18n_lang,
+    );
+  }
 }
