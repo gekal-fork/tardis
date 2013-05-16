@@ -604,7 +604,7 @@ function _tardis_month_names() {
  *
  * Determines whether date.module fields should be used in queries.
  */
-function _tardisdate_query_dates ($query, $tardis_query_date, $tardis_query_date_min, $tardis_query_date_max) {
+function _tardisdate_query_dates($query, $tardis_query_date, $tardis_query_date_min, $tardis_query_date_max) {
   if (module_exists('tardisdate') && $tardis_query_date != 'created') {
     // date.module fields are stored as YYYY-MM-DD HH:MM:SS
     // and need no conversion.
@@ -627,7 +627,7 @@ function _tardisdate_query_dates ($query, $tardis_query_date, $tardis_query_date
  *
  * Fetches fields used by submodules in the query.
  */
-function _tardis_submodule_fields ($tardis_object, &$tardisdate_field, &$tardisi18n_lang) {
+function _tardis_submodule_fields($tardis_object, &$tardisdate_field, &$tardisi18n_lang) {
   // If TARDIS Date module is on, fetch the date field used in the query.
   if (module_exists('tardisdate')) {
     $tardisdate_field = ($tardis_object->tardisdate_field != '') ? $tardis_object->tardisdate_field : 'created';
@@ -651,7 +651,7 @@ function _tardis_submodule_fields ($tardis_object, &$tardisdate_field, &$tardisi
  *
  * Query joins made by submodules.
  */
-function _tardis_submodule_query_joins ($query, $tardisi18n_lang, $tardisdate_field, &$tardis_query_date) {
+function _tardis_submodule_query_joins($query, $tardisi18n_lang, $tardisdate_field, &$tardis_query_date) {
   // TARDIS Internationalization query join.
   // Allows TARDIS Internationalization to change the query, restricting it
   // to nodes that are in a certain language.

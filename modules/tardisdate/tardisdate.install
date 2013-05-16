@@ -4,23 +4,30 @@
  * @file
  * Install file.
  */
+
+/**
+ * Implements hook_schema_alter().
+ */
 function tardisdate_schema_alter(&$schema) {
   // Defines new Date fields for TARDIS blocks and pages.
   $schema['tardis_blocks']['fields']['tardisdate_field'] = array(
-      'type' => 'varchar',
-      'length' => 64,
-      'default' => '',
-      'description' => t('Sets a date field for use with TARDIS blocks.'),
+    'type' => 'varchar',
+    'length' => 64,
+    'default' => '',
+    'description' => t('Sets a date field for use with TARDIS blocks.'),
   );
 
   $schema['tardis_pages']['fields']['tardisdate_field'] = array(
-      'type' => 'varchar',
-      'length' => 64,
-      'default' => '',
-      'description' => t('Sets a date field for use with TARDIS blocks.'),
+    'type' => 'varchar',
+    'length' => 64,
+    'default' => '',
+    'description' => t('Sets a date field for use with TARDIS blocks.'),
   );
 }
 
+/**
+ * Implements hook_install().
+ */
 function tardisdate_install() {
   // Installs new Date fields for TARDIS blocks and pages.
   $schema_blocks = drupal_get_schema('tardis_blocks');
@@ -36,8 +43,6 @@ function tardisdate_install() {
     'tardisdate_field',
     $schema_pages['fields']['tardisdate_field']
   );
-
-  return t('TARDIS Date page and block fields added successfully.');
 }
 
 /**

@@ -31,7 +31,7 @@ function tardisi18n_form_alter(&$form, &$form_state, $form_id) {
     // Get a list of all available languages:
     $tardisi18n_options = language_list();
 
-    // Create an array of languages, starting with the current one and undefined.
+    // Create an array of languages starting with the current one and undefined.
     // That allows users to see either nodes without a defined language, or
     // nodes that match the current language easily.
     $options = array(

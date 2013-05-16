@@ -6,8 +6,6 @@
  *
  * Automatically enables the permission to access the TARDIS
  * by anonymous and authenticated users.
- *
- * Also deletes variables during uninstall.
  */
 
 /**

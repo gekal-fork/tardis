@@ -155,7 +155,7 @@ function _tardis_query_page($nodes_per_page, $node_types, $tardisdate_field, $ta
     }
 
     // Determines whether date.module fields should be used.
-    _tardisdate_query_dates ($query, $tardis_query_date, $tardis_query_date_min, $tardis_query_date_max);
+    _tardisdate_query_dates($query, $tardis_query_date, $tardis_query_date_min, $tardis_query_date_max);
   }
 
   return $query->execute()->fetchAllAssoc('nid');

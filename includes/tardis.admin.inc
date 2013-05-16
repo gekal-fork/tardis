@@ -35,7 +35,7 @@ function tardis_overview($form, &$form_state) {
     );
 
     // Create extra table headers when submodules are on.
-    _tardis_submodules_extra_headers ($tardis_elements_header);
+    _tardis_submodules_extra_headers($tardis_elements_header);
 
     $tardis_elements_header[] = array('data' => t('Operations'));
 
@@ -68,8 +68,8 @@ function tardis_overview($form, &$form_state) {
         array('data' => $tardis_element_block_link),
       );
 
-    // Add extra table info when submodules are on.
-    _tardis_submodules_extra_info (&$tardis_elements_rows, &$tardis_elements_row, $tardis_element, 'block');
+      // Add extra table info when submodules are on.
+      _tardis_submodules_extra_info(&$tardis_elements_rows, &$tardis_elements_row, $tardis_element, 'block');
 
     }
   }
@@ -111,7 +111,7 @@ function tardis_overview($form, &$form_state) {
       array('data' => t('Address')),
     );
 
-    _tardis_submodules_extra_headers ($tardis_elements_header);
+    _tardis_submodules_extra_headers($tardis_elements_header);
 
     // Create extra table headers when submodules are on.
     $tardis_elements_header[] = array('data' => t('Operations'));
@@ -145,8 +145,8 @@ function tardis_overview($form, &$form_state) {
         array('data' => $tardis_element_address),
       );
 
-    // Add extra table info when submodules are on.
-    _tardis_submodules_extra_info (&$tardis_elements_rows, &$tardis_elements_row, $tardis_element, 'page');
+      // Add extra table info when submodules are on.
+      _tardis_submodules_extra_info(&$tardis_elements_rows, &$tardis_elements_row, $tardis_element, 'page');
 
     }
   }
@@ -209,7 +209,7 @@ function tardis_block_settings($form, &$form_state) {
     $tardis_block_block_link = $query['block_link'];
 
     // Retrieve TARDIS submodules' values.
-    _tardis_submodules_values ($query, $tardisdate_field, $tardisi18n_lang);
+    _tardis_submodules_values($query, $tardisdate_field, $tardisi18n_lang);
   }
   else {
     // If we're creating a new block, then we must
@@ -228,7 +228,7 @@ function tardis_block_settings($form, &$form_state) {
     $tardis_block_block_link = '';
 
     // Set default values for TARDIS submodules.
-    _tardis_submodules_default_values ($tardisdate_field, $tardisi18n_lang);
+    _tardis_submodules_default_values($tardisdate_field, $tardisi18n_lang);
   }
 
   $form['name'] = array(
@@ -359,7 +359,7 @@ function tardis_block_settings($form, &$form_state) {
   );
 
   // Pass update information on.
-  _tardis_submodules_update_info (&$form, $tardisdate_field, $tardisi18n_lang);
+  _tardis_submodules_update_info(&$form, $tardisdate_field, $tardisi18n_lang);
 
   // Validate and submit functions.
   $form['#validate'][] = 'tardis_block_settings_validate';
@@ -444,7 +444,7 @@ function tardis_page_settings($form, &$form_state) {
     $tardis_page_nodes_per_page = $query['nodes_per_page'];
 
     // Retrieve TARDIS submodules' values.
-    _tardis_submodules_values ($query, $tardisdate_field, $tardisi18n_lang);
+    _tardis_submodules_values($query, $tardisdate_field, $tardisi18n_lang);
   }
   else {
     // If we're creating a new page, then we must
@@ -460,7 +460,7 @@ function tardis_page_settings($form, &$form_state) {
     $tardis_page_nodes_per_page = 10;
 
     // Set default values for TARDIS submodules.
-    _tardis_submodules_default_values ($tardisdate_field, $tardisi18n_lang);
+    _tardis_submodules_default_values($tardisdate_field, $tardisi18n_lang);
   }
 
   $form['name'] = array(
@@ -550,7 +550,7 @@ function tardis_page_settings($form, &$form_state) {
   );
 
   // Pass update information on.
-  _tardis_submodules_update_info (&$form, $tardisdate_field, $tardisi18n_lang);
+  _tardis_submodules_update_info(&$form, $tardisdate_field, $tardisi18n_lang);
 
   // Here's a group to place the TARDIS submodules.
   // This group will be rendered as a vertical tab group.
@@ -716,7 +716,7 @@ function tardis_delete_confirm_submit($form, &$form_state) {
  *
  * Creates extra table headers when submodules are on.
  */
-function _tardis_submodules_extra_headers (&$tardis_elements_header) {
+function _tardis_submodules_extra_headers(&$tardis_elements_header) {
   // If TARDIS Date is enabled, add an extra column.
   (module_exists('tardisdate')) ? $tardis_elements_header[] = array('data' => t('Date field')) : '';
 
@@ -729,7 +729,7 @@ function _tardis_submodules_extra_headers (&$tardis_elements_header) {
  *
  * Adds extra table info when submodules are on.
  */
-function _tardis_submodules_extra_info (&$tardis_elements_rows, &$tardis_elements_row, $tardis_element, $tardis_element_type) {
+function _tardis_submodules_extra_info(&$tardis_elements_rows, &$tardis_elements_row, $tardis_element, $tardis_element_type) {
   // If TARDIS Date is enabled, add extra info.
   (module_exists('tardisdate')) ? $tardis_elements_row[] = array('data' => $tardis_element->tardisdate_field) : '';
 
@@ -755,15 +755,15 @@ function _tardis_submodules_extra_info (&$tardis_elements_rows, &$tardis_element
 
   }
 
-    $tardis_elements_row[] = array(
-      'data' => t(
-        '<a href="@edit_link">edit</a> | <a href="@delete_link">delete</a>',
-        array(
-          '@edit_link' => 'tardis/' . $tardis_element_type . '/edit/' . $tardis_element->name,
-          '@delete_link' => 'tardis/' . $tardis_element_type . '/delete/' . $tardis_element->name,
-        )
+  $tardis_elements_row[] = array(
+    'data' => t(
+      '<a href="@edit_link">edit</a> | <a href="@delete_link">delete</a>',
+      array(
+        '@edit_link' => 'tardis/' . $tardis_element_type . '/edit/' . $tardis_element->name,
+        '@delete_link' => 'tardis/' . $tardis_element_type . '/delete/' . $tardis_element->name,
       )
-    );
+    ),
+  );
 
   $tardis_elements_rows[] = $tardis_elements_row;
 }
@@ -773,7 +773,7 @@ function _tardis_submodules_extra_info (&$tardis_elements_rows, &$tardis_element
  *
  * Retrieves TARDIS submodules' values.
  */
-function _tardis_submodules_values ($query, &$tardisdate_field, &$tardisi18n_lang) {
+function _tardis_submodules_values($query, &$tardisdate_field, &$tardisi18n_lang) {
   if (module_exists('tardisdate')) {
     // If TARDIS Date is enabled, check for which date.module field
     // is in the db - if any.
@@ -792,7 +792,7 @@ function _tardis_submodules_values ($query, &$tardisdate_field, &$tardisi18n_lan
  *
  * Sets default values for TARDIS submodules.
  */
-function _tardis_submodules_default_values (&$tardisdate_field, &$tardisi18n_lang) {
+function _tardis_submodules_default_values(&$tardisdate_field, &$tardisi18n_lang) {
   if (module_exists('tardisdate')) {
     // Default value for TARDIS Date field.
     $tardisdate_field = 'created';
@@ -809,7 +809,7 @@ function _tardis_submodules_default_values (&$tardisdate_field, &$tardisi18n_lan
  *
  * Passes update information on.
  */
-function _tardis_submodules_update_info (&$form, $tardisdate_field, $tardisi18n_lang) {
+function _tardis_submodules_update_info(&$form, $tardisdate_field, $tardisi18n_lang) {
   // If TARDIS Date module is enabled, pass the created or date.module field on.
   if (module_exists('tardisdate')) {
     $form['tardisdate_update'] = array(

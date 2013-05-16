@@ -4,21 +4,28 @@
  * @file
  * Install file.
  */
+
+/**
+ * Implements hook_schema_alter().
+ */
 function tardisi18n_schema_alter(&$schema) {
   // Defines new Internationalization fields for TARDIS blocks and pages.
   $schema['tardis_blocks']['fields']['tardisi18n_lang'] = array(
-      'type' => 'blob',
-      'size' => 'normal',
-      'description' => t('Sets a language field for use with TARDIS blocks.'),
+    'type' => 'blob',
+    'size' => 'normal',
+    'description' => t('Sets a language field for use with TARDIS blocks.'),
   );
 
   $schema['tardis_pages']['fields']['tardisi18n_lang'] = array(
-      'type' => 'blob',
-      'size' => 'normal',
-      'description' => t('Sets a language field for use with TARDIS blocks.'),
+    'type' => 'blob',
+    'size' => 'normal',
+    'description' => t('Sets a language field for use with TARDIS blocks.'),
   );
 }
 
+/**
+ * Implements hook_install().
+ */
 function tardisi18n_install() {
   // Installs new Internationalization fields for TARDIS blocks and pages.
   $schema_blocks = drupal_get_schema('tardis_blocks');
@@ -34,8 +41,6 @@ function tardisi18n_install() {
     'tardisi18n_lang',
     $schema_pages['fields']['tardisi18n_lang']
   );
-
-  return t('TARDIS Date page and block fields added successfully.');
 }
 
 /**
