@@ -116,6 +116,7 @@ function _tardis_query_page($nodes_per_page, $node_types, $tardisdate_field, $ta
       'created',
     ))
     ->addTag('node_access')
+    ->condition('status', 1)
     ->extend('PagerDefault')
     ->condition('type', $node_types)
     ->limit($nodes_per_page);
