@@ -11,9 +11,11 @@ Here's how you do it:
 1. Activate the module in example.com/admin/modules (hint: it's in the "TARDIS")
 group.
 
-2. Visit example.com/admin/structure/tardis and scroll to the bottom. You'll see
-a new vertical tab called "TARDIS Internationalization". Choose your language(s)
-under "Languages". There's also "Current language" and "Undefined" for
-fine-tuning of results.
+2. Visit example.com/admin/structure/tardis and edit any TARDIS page or TARDIS
+block you created (or create a new one).
 
-3. Save and profit!
+3. Scroll to the bottom and look for the "TARDIS Internationalization" vertical
+tab. In there, choose your language(s) under "Languages". There's also "Current
+language" and "Undefined" for fine-tuning of results.
+
+4. Save and profit!

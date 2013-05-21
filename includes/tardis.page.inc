@@ -80,10 +80,16 @@ function tardis_page($tardis_page_name) {
   // Load a list of node objects with the NIDs.
   $nodes = node_load_multiple($nids);
 
-  // Future Display Suite integration right here:
-  $views = node_view_multiple($nodes, 'teaser');
+  // TARDIS Render integration.
+  if (module_exists('tardisrender')) {
+    $tardisrender_view_mode = $tardis_page->tardisrender_view_mode;
+  }
+  else {
+    $tardisrender_view_mode = 'teaser';
+  }
+  $views = node_view_multiple($nodes, $tardisrender_view_mode);
 
-  // Add those objects to the output and render them as teasers.
+  // Add those objects to the output and render them.
   $output = '';
   foreach ($views as $view) {
     $output .= render($view);
@@ -116,7 +122,6 @@ function _tardis_query_page($nodes_per_page, $node_types, $tardisdate_field, $ta
       'created',
     ))
     ->addTag('node_access')
-    ->condition('status', 1)
     ->extend('PagerDefault')
     ->condition('type', $node_types)
     ->limit($nodes_per_page);

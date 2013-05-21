@@ -403,7 +403,6 @@ function _tardis_query_block($past_months, $node_types, $stop_year, $current_mon
         'created',
       ))
       ->addTag('node_access')
-      ->condition('status', 1)
       ->condition('type', $tardis_block_node_types)
       ->range(0, 1);
 
