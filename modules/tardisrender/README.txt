@@ -5,7 +5,7 @@ The TARDIS Render module allows selct view modes to be used for displaying nodes
 retrieved from the TARDIS query. No integration with Display Suite is needed,
 but if you have DS installed you'll be able to create extra view modes.
 
-Also while tou you don't need a sonic screwdriver, having one is pretty cool.
+Also: while tou you don't need a sonic screwdriver, having one is pretty cool.
 
 Here's how you do it:
 1. Activate the module in example.com/admin/modules (hint: it's in the "TARDIS")
