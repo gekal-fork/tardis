@@ -228,10 +228,11 @@ function tardis_block_view($delta = '') {
         $month_link = $tardis_block->month_link;
 
         // Fetch fields used by submodules in the query.
-        _tardis_submodule_fields($tardis_block, $tardisdate_field, $tardisi18n_lang);
+        $tardistoken_block_strings = array();
+        _tardis_submodule_fields($tardis_block, 'block', $tardisdate_field, $tardisi18n_lang, $tardistoken_titles);
 
         // Build the query that returns a list of TARDIS links.
-        $information = _tardis_query_block($past_months, $node_types, $stop_year, $current_month, $block_link, $year_link, $month_link, $tardisdate_field, $tardisi18n_lang);
+        $information = _tardis_query_block($past_months, $node_types, $stop_year, $current_month, $block_link, $year_link, $month_link, $tardisdate_field, $tardisi18n_lang, $tardistoken_titles);
 
         // Main block content.
         $content = array();
@@ -242,15 +243,24 @@ function tardis_block_view($delta = '') {
         // If not, months go together with years.
         if ($tardis_block_link_nesting_months_years == FALSE) {
           foreach ($information as $item) {
-
             // Did the user set month names or numbers?
             $tardis_block_month_link = $tardis_block->month_link;
             $tardis_block_month_link_separator = ($tardis_block_month_link == 'names') ? ', ' : '/';
             $tardis_block_nesting_year = $tardis_block_month_link_separator . $item['title'];
-
             if ($item['children']) {
               foreach ($item['children'] as $child_item) {
-                $child_item['title'] .= $tardis_block_nesting_year;
+                // Is there a token-enabled title?
+                if (module_exists('tardistoken') && $tardistoken_titles['tardistoken_year_month_text'] != '') {
+                  $tardis_options = array(
+                    'object' => 'block',
+                    'year' => $child_item['year'],
+                    'month' => $child_item['month'],
+                  );
+                  $child_item['title'] = token_replace($tardistoken_titles['tardistoken_year_month_text'], $tardis_options);
+                }
+                else {
+                  $child_item['title'] .= $tardis_block_nesting_year;
+                }
                 $content[] = array(
                   'data' => theme('tardis_month', $child_item),
                   'class' => $child_item['class'],
@@ -330,7 +340,7 @@ function tardis_block_view($delta = '') {
  *   A renderable array of links to archive pages.
  * TODO: submodules integration
  */
-function _tardis_query_block($past_months, $node_types, $stop_year, $current_month, $block_link, $year_link, $month_link, $tardisdate_field, $tardisi18n_lang) {
+function _tardis_query_block($past_months, $node_types, $stop_year, $current_month, $block_link, $year_link, $month_link, $tardisdate_field, $tardisi18n_lang, $tardistoken_titles) {
   // The $list array will hold all of our content.
   $list = array();
 
@@ -418,13 +428,11 @@ function _tardis_query_block($past_months, $node_types, $stop_year, $current_mon
     // month.
     // If we're in January, then we'll display December from the previous year.
     if (count($result) > 0) {
-      // In case users set a custom link, here it is:
-      $tardis_block_block_link = $block_link;
-      $tardis_page_address = ($tardis_block_block_link == '') ? 'recent/nodes' : $tardis_block_block_link;
+      // This is the link for this block:
+      $tardis_page_address = ($block_link == '') ? 'recent/nodes' : $block_link;
 
       // Did users set the block years to render without links?
-      $tardis_block_year_link = $year_link;
-      if ($tardis_block_year_link == 'no_link') {
+      if ($year_link == 'no_link') {
         $tardis_block_year_link_target = NULL;
       }
       else {
@@ -433,11 +441,24 @@ function _tardis_query_block($past_months, $node_types, $stop_year, $current_mon
 
       // We add the year the first time.
       if ($tardis_show_year == 1) {
+        // Is TARDIS Token enabled? And is there a token-enabled title?
+        if (module_exists('tardistoken') && $tardistoken_titles['tardistoken_year_text'] != '') {
+          $tardis_options = array(
+            'object' => 'block',
+            'year' => $tardis_past_year,
+          );
+          $tardis_past_year_title = token_replace($tardistoken_titles['tardistoken_year_text'], $tardis_options);
+        }
+        else {
+          $tardis_past_year_title = $tardis_past_year;
+        }
+
         $list[] = array(
-          'title' => $tardis_past_year,
+          'title' => $tardis_past_year_title,
           'link' => $tardis_block_year_link_target,
           // Those classes will help style links if needed.
           'class' => array('tardis-link-year', "tardis-year-$tardis_past_year"),
+          'year' => $tardis_past_year,
         );
         // Each time we show the year, we mark it so that it's not shown again
         // until it reaches December on another iteration.
@@ -450,13 +471,24 @@ function _tardis_query_block($past_months, $node_types, $stop_year, $current_mon
       // Did the user set months to render as names or numbers?
       $tardis_block_month_link = $month_link;
 
-      if ($tardis_block_month_link == 'names') {
-        // This helper funtion retrieves month names.
-        $tardis_month_names = _tardis_month_names();
-        $tardis_past_month_title = $tardis_month_names[$tardis_past_month];
+      // Check whether TARDIS Token is enabled and if there's a
+      // token-enabled link text for this option.
+      if (module_exists('tardistoken') && $tardistoken_titles['tardistoken_month_text'] != '') {
+        $tardis_options = array(
+          'object' => 'block',
+          'month' => $tardis_past_month,
+        );
+        $tardis_past_month_title = token_replace($tardistoken_titles['tardistoken_month_text'], $tardis_options);
       }
       else {
-        $tardis_past_month_title = $tardis_past_month;
+        if ($tardis_block_month_link == 'names') {
+          // This helper funtion retrieves month names.
+          $tardis_month_names = _tardis_month_names();
+          $tardis_past_month_title = $tardis_month_names[$tardis_past_month];
+        }
+        else {
+          $tardis_past_month_title = $tardis_past_month;
+        }
       }
 
       // Now we add a month. Just like with the year link, the month link
@@ -470,6 +502,8 @@ function _tardis_query_block($past_months, $node_types, $stop_year, $current_mon
           "tardis-year-$tardis_past_year",
           "tardis-month-$tardis_past_month",
         ),
+        'year' => $tardis_past_year,
+        'month' => $tardis_past_month,
       );
       $tardis_block_past_months--;
     }
@@ -600,6 +634,28 @@ function _tardis_month_names() {
 }
 
 /**
+ * Helper function that returns month abbreviations.
+ */
+function _tardis_month_abbreviations() {
+  $tardis_month_abbreviations = array(
+    '01' => t('Jan'),
+    '02' => t('Feb'),
+    '03' => t('Mar'),
+    '04' => t('Apr'),
+    '05' => t('May'),
+    '06' => t('Jun'),
+    '07' => t('Jul'),
+    '08' => t('Aug'),
+    '09' => t('Sep'),
+    '10' => t('Oct'),
+    '11' => t('Nov'),
+    '12' => t('Dec'),
+  );
+
+  return $tardis_month_abbreviations;
+}
+
+/**
  * TARDIS submodules helper function.
  *
  * Determines whether date.module fields should be used in queries.
@@ -627,7 +683,7 @@ function _tardisdate_query_dates($query, $tardis_query_date, $tardis_query_date_
  *
  * Fetches fields used by submodules in the query.
  */
-function _tardis_submodule_fields($tardis_object, &$tardisdate_field, &$tardisi18n_lang) {
+function _tardis_submodule_fields($tardis_object, $tardis_object_type, &$tardisdate_field, &$tardisi18n_lang, &$tardistoken_titles) {
   // If TARDIS Date module is on, fetch the date field used in the query.
   if (module_exists('tardisdate')) {
     $tardisdate_field = ($tardis_object->tardisdate_field != '') ? $tardis_object->tardisdate_field : 'created';
@@ -635,6 +691,7 @@ function _tardis_submodule_fields($tardis_object, &$tardisdate_field, &$tardisi1
   else {
     $tardisdate_field = 'created';
   }
+
   // If TARDIS Internationalization is on, fetch the query language.
   // There might be no language yet, so we need a default value.
   // Also the language is an array, which is stored in serialized form.
@@ -643,6 +700,21 @@ function _tardis_submodule_fields($tardis_object, &$tardisdate_field, &$tardisi1
   }
   else {
     $tardisi18n_lang = '';
+  }
+
+  // If TARDIS Token module is on, and it's a page,
+  // fetch specific page titles used in the query.
+  if (module_exists('tardistoken') && $tardis_object_type == 'page') {
+    $tardistoken_titles['year'] = $tardis_object->tardistoken_page_title_year;
+    $tardistoken_titles['year_month'] = $tardis_object->tardistoken_page_title_year_month;
+  }
+
+  // If TARDIS Token module is on, and it's a block,
+  // fetch specific link texts used in the query.
+  if (module_exists('tardistoken') && $tardis_object_type == 'block') {
+    $tardistoken_titles['tardistoken_year_text'] = $tardis_object->tardistoken_year_text;
+    $tardistoken_titles['tardistoken_month_text'] = $tardis_object->tardistoken_month_text;
+    $tardistoken_titles['tardistoken_year_month_text'] = $tardis_object->tardistoken_year_month_text;
   }
 }
 

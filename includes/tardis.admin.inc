@@ -111,6 +111,10 @@ function tardis_overview($form, &$form_state) {
       array('data' => t('Address')),
     );
 
+    // If TARDIS Token is enabled, the "Title" table header
+    // needs to change slightly.
+    (module_exists('tardistoken')) ? $tardis_elements_header[1]['data'] = t('Title(s)') : '';
+
     _tardis_submodules_extra_headers('page', $tardis_elements_header);
 
     // Create extra table headers when submodules are on.
@@ -119,7 +123,22 @@ function tardis_overview($form, &$form_state) {
     foreach ($tardis_elements as $tardis_element) {
       // We build each row using data extracted from the db.
       $tardis_element_name = $tardis_element->name;
-      $tardis_element_title = $tardis_element->title;
+
+      // If TARDIS Token is enabled, the "Title" cell needs to change slightly.
+      if (module_exists('tardistoken')) {
+        $tardis_element_title = array(
+          '#theme' => 'item_list',
+          '#type' => 'ul',
+          '#items' => array(
+            '<strong>Regular title: </strong><br />' . filter_xss($tardis_element->title),
+            '<strong>Title with year: </strong><br />' . filter_xss($tardis_element->tardistoken_page_title_year),
+            '<strong>Title with month and year: </strong><br />' . filter_xss($tardis_element->tardistoken_page_title_year_month),
+          ),
+        );
+      }
+      else {
+        $tardis_element_title = $tardis_element->title;
+      }
 
       // Node types are stored as an array and, therefore, require some
       // processing. They're in serialized form, which must be unserialized.
@@ -175,6 +194,10 @@ function tardis_overview($form, &$form_state) {
  * Works for both creating and uptating.
  */
 function tardis_block_settings($form, &$form_state) {
+  // Due to a limitation in the way the menu system works,
+  // we must change the title manually here.
+  drupal_set_title('Create TARDIS block');
+
   // Are we creating a new block, or updating an existing one?
   $tardis_block_name = arg(5);
 
@@ -194,7 +217,7 @@ function tardis_block_settings($form, &$form_state) {
 
     // Extra precaution against XSS.
     $tardis_block_title = filter_xss($query['title']);
-    drupal_set_title(t('Edit block <em>@name</em>', array('@name' => $tardis_block_title)), PASS_THROUGH);
+    drupal_set_title(t('Edit block <em>@name</em>', array('@name' => $tardis_block_name)), PASS_THROUGH);
 
     // Node types are stored as an array and must be unserialized.
     $tardis_block_node_types = unserialize($query['node_types']);
@@ -209,7 +232,7 @@ function tardis_block_settings($form, &$form_state) {
     $tardis_block_block_link = $query['block_link'];
 
     // Retrieve TARDIS submodules' values.
-    _tardis_submodules_values('block', $query, $tardisdate_field, $tardisi18n_lang, $tardisrender_view_mode);
+    _tardis_submodules_values('block', $query, $tardisdate_field, $tardisi18n_lang, $tardisrender_view_mode, $tardistoken_titles);
   }
   else {
     // If we're creating a new block, then we must
@@ -228,7 +251,7 @@ function tardis_block_settings($form, &$form_state) {
     $tardis_block_block_link = '';
 
     // Set default values for TARDIS submodules.
-    _tardis_submodules_default_values('block', $tardisdate_field, $tardisi18n_lang, $tardisrender_view_mode);
+    _tardis_submodules_default_values('block', $tardisdate_field, $tardisi18n_lang, $tardisrender_view_mode, $tardistoken_titles);
   }
 
   $form['name'] = array(
@@ -265,7 +288,7 @@ function tardis_block_settings($form, &$form_state) {
   $form['current_month'] = array(
     '#type' => 'checkbox',
     '#title' => t('Include the current month'),
-    '#description' => t('Check this box to have the TARDIS display the current month.'),
+    '#description' => t('Check this box to have the TARDIS display results from the current month.'),
     '#default_value' => $tardis_block_current_month,
   );
 
@@ -359,7 +382,7 @@ function tardis_block_settings($form, &$form_state) {
   );
 
   // Pass update information on.
-  _tardis_submodules_update_info('block', &$form, $tardisdate_field, $tardisi18n_lang, '');
+  _tardis_submodules_update_info('block', &$form, $tardisdate_field, $tardisi18n_lang, '', $tardistoken_titles);
 
   // Validate and submit functions.
   $form['#validate'][] = 'tardis_block_settings_validate';
@@ -407,6 +430,10 @@ function tardis_block_settings_validate($form, &$form_state) {
  * TODO: submodule integrations.
  */
 function tardis_page_settings($form, &$form_state) {
+  // Due to a limitation in the way the menu system works,
+  // we must change the title manually here.
+  drupal_set_title('Create TARDIS page');
+
   // Are we creating a new page, or updating an existing one?
   $tardis_page_name = arg(5);
 
@@ -429,7 +456,7 @@ function tardis_page_settings($form, &$form_state) {
 
     // Extra precaution against XSS.
     $tardis_page_title = filter_xss($query['title']);
-    drupal_set_title(t('Edit page <em>@name</em>', array('@name' => $tardis_page_title)), PASS_THROUGH);
+    drupal_set_title(t('Edit page <em>@name</em>', array('@name' => $tardis_page_name)), PASS_THROUGH);
 
     // Should TARDIS pages have dates appended to their titles?
     $tardis_page_title_date = $query['title_date'];
@@ -444,7 +471,7 @@ function tardis_page_settings($form, &$form_state) {
     $tardis_page_nodes_per_page = $query['nodes_per_page'];
 
     // Retrieve TARDIS submodules' values.
-    _tardis_submodules_values('page', $query, $tardisdate_field, $tardisi18n_lang, $tardisrender_view_mode);
+    _tardis_submodules_values('page', $query, $tardisdate_field, $tardisi18n_lang, $tardisrender_view_mode, $tardistoken_titles);
   }
   else {
     // If we're creating a new page, then we must
@@ -460,7 +487,7 @@ function tardis_page_settings($form, &$form_state) {
     $tardis_page_nodes_per_page = 10;
 
     // Set default values for TARDIS submodules.
-    _tardis_submodules_default_values('page', $tardisdate_field, $tardisi18n_lang, $tardisrender_view_mode);
+    _tardis_submodules_default_values('page', $tardisdate_field, $tardisi18n_lang, $tardisrender_view_mode, $tardistoken_titles);
   }
 
   $form['name'] = array(
@@ -506,7 +533,7 @@ function tardis_page_settings($form, &$form_state) {
   $form['current_month'] = array(
     '#type' => 'checkbox',
     '#title' => t('Include the current month'),
-    '#description' => t('Check this box to have the TARDIS display the current month.'),
+    '#description' => t('Check this box to have the TARDIS display results from the current month.'),
     '#default_value' => $tardis_page_current_month,
   );
 
@@ -550,7 +577,7 @@ function tardis_page_settings($form, &$form_state) {
   );
 
   // Pass update information on.
-  _tardis_submodules_update_info('page', &$form, $tardisdate_field, $tardisi18n_lang, $tardisrender_view_mode);
+  _tardis_submodules_update_info('page', &$form, $tardisdate_field, $tardisi18n_lang, $tardisrender_view_mode, $tardistoken_titles);
 
   // Here's a group to place the TARDIS submodules.
   // This group will be rendered as a vertical tab group.
@@ -717,13 +744,16 @@ function tardis_delete_confirm_submit($form, &$form_state) {
  * Creates extra table headers when submodules are on.
  */
 function _tardis_submodules_extra_headers($tardis_element_type, &$tardis_elements_header) {
+  // If TARDIS Token is enabled, add an extra column for TARDIS blocks.
+  (module_exists('tardistoken') && $tardis_element_type == 'block') ? $tardis_elements_header[] = array('data' => t('Link titles')) : '';
+
   // If TARDIS Date is enabled, add an extra column.
   (module_exists('tardisdate')) ? $tardis_elements_header[] = array('data' => t('Date field')) : '';
 
   // If TARDIS Internationalization is enabled, add an extra column.
   (module_exists('tardisi18n')) ? $tardis_elements_header[] = array('data' => t('Languages')) : '';
 
-  // If TARDIS Render is enabled, add an extra column.
+  // If TARDIS Render is enabled, add an extra column for TARDIS pages.
   (module_exists('tardisrender') && $tardis_element_type == 'page') ? $tardis_elements_header[] = array('data' => t('View mode')) : '';
 }
 
@@ -733,6 +763,21 @@ function _tardis_submodules_extra_headers($tardis_element_type, &$tardis_element
  * Adds extra table info when submodules are on.
  */
 function _tardis_submodules_extra_info($tardis_element_type, &$tardis_elements_rows, &$tardis_elements_row, $tardis_element) {
+  // If TARDIS Token is enabled, add extra info to the TARDIS pages table.
+  if (module_exists('tardistoken') && $tardis_element_type == 'block') {
+    $tardis_element_link_titles = array(
+      '#theme' => 'item_list',
+      '#type' => 'ul',
+      '#items' => array(
+        '<strong>Title for year and month: </strong><br />' . filter_xss($tardis_element->tardistoken_year_month_text),
+        '<strong>Title for year: </strong><br />' . filter_xss($tardis_element->tardistoken_year_text),
+        '<strong>Title for month: </strong><br />' . filter_xss($tardis_element->tardistoken_month_text),
+      ),
+    );
+
+    $tardis_elements_row[] = array('data' => $tardis_element_link_titles);
+  }
+
   // If TARDIS Date is enabled, add extra info.
   (module_exists('tardisdate')) ? $tardis_elements_row[] = array('data' => $tardis_element->tardisdate_field) : '';
 
@@ -762,7 +807,6 @@ function _tardis_submodules_extra_info($tardis_element_type, &$tardis_elements_r
     // First we retrieve all the view modes for this TARDIS from the db,
     // if any.
     $tardis_element_view_mode = ($tardis_element->tardisrender_view_mode != '') ? $tardis_element->tardisrender_view_mode : 'teaser';
-
     $tardis_elements_row[] = array('data' => $tardis_element_view_mode);
   }
 
@@ -784,7 +828,7 @@ function _tardis_submodules_extra_info($tardis_element_type, &$tardis_elements_r
  *
  * Retrieves TARDIS submodules' values.
  */
-function _tardis_submodules_values($tardis_type, $query, &$tardisdate_field, &$tardisi18n_lang, &$tardisrender_view_mode) {
+function _tardis_submodules_values($tardis_type, $query, &$tardisdate_field, &$tardisi18n_lang, &$tardisrender_view_mode, &$tardistoken_titles) {
   if (module_exists('tardisdate')) {
     // If TARDIS Date is enabled, check for which date.module field
     // is in the db - if any.
@@ -801,6 +845,25 @@ function _tardis_submodules_values($tardis_type, $query, &$tardisdate_field, &$t
     // If TARDIS Render is enabled, check for a view mode in the db, if any.
     $tardisrender_view_mode = ($query['tardisrender_view_mode'] != '') ? $query['tardisrender_view_mode'] : 'teaser';
   }
+
+  if (module_exists('tardistoken')) {
+    // If TARDIS Token is enabled, check for tokenized titles, if any.
+    // They're stored in separate db fields, but retrieved as an array:
+    // in this way, there needs to be only a single hidden field for
+    // settings updates.
+    $tardistoken_titles = array();
+    switch ($tardis_type) {
+      case 'page':
+        $tardistoken_titles['page_title_year'] = ($query['tardistoken_page_title_year'] != '') ? $query['tardistoken_page_title_year'] : '';
+        $tardistoken_titles['page_title_year_month'] = ($query['tardistoken_page_title_year_month'] != '') ? $query['tardistoken_page_title_year_month'] : '';
+        break;
+      case 'block':
+        $tardistoken_titles['tardistoken_year_text'] = ($query['tardistoken_year_text'] != '') ? $query['tardistoken_year_text'] : '';
+        $tardistoken_titles['tardistoken_month_text'] = ($query['tardistoken_month_text'] != '') ? $query['tardistoken_month_text'] : '';
+        $tardistoken_titles['tardistoken_year_month_text'] = ($query['tardistoken_year_month_text'] != '') ? $query['tardistoken_year_month_text'] : '';
+        break;
+    }
+  }
 }
 
 /**
@@ -808,7 +871,7 @@ function _tardis_submodules_values($tardis_type, $query, &$tardisdate_field, &$t
  *
  * Sets default values for TARDIS submodules.
  */
-function _tardis_submodules_default_values($tardis_type, &$tardisdate_field, &$tardisi18n_lang, &$tardisrender_view_mode) {
+function _tardis_submodules_default_values($tardis_type, &$tardisdate_field, &$tardisi18n_lang, &$tardisrender_view_mode, &$tardistoken_titles) {
   if (module_exists('tardisdate')) {
     // Default value for TARDIS Date field.
     $tardisdate_field = 'created';
@@ -823,6 +886,17 @@ function _tardis_submodules_default_values($tardis_type, &$tardisdate_field, &$t
     // If TARDIS Render is enabled, check for a view mode in the db, if any.
     $tardisrender_view_mode = 'teaser';
   }
+
+  if (module_exists('tardistoken')) {
+    // If TARDIS Token is enabled, check for tokenized titles, if any.
+    $tardistoken_titles = array();
+    switch ($tardis_type) {
+      case 'page':
+        $tardistoken_titles['page_title_year'] = '';
+        $tardistoken_titles['page_title_year_month'] = '';
+        break;
+    }
+  }
 }
 
 /**
@@ -830,7 +904,7 @@ function _tardis_submodules_default_values($tardis_type, &$tardisdate_field, &$t
  *
  * Passes update information on.
  */
-function _tardis_submodules_update_info($tardis_type, &$form, $tardisdate_field, $tardisi18n_lang, $tardisrender_view_mode) {
+function _tardis_submodules_update_info($tardis_type, &$form, $tardisdate_field, $tardisi18n_lang, $tardisrender_view_mode, $tardistoken_titles) {
   // If TARDIS Date module is enabled, pass the created or date.module field on.
   if (module_exists('tardisdate')) {
     $form['tardisdate_update'] = array(
@@ -853,6 +927,14 @@ function _tardis_submodules_update_info($tardis_type, &$form, $tardisdate_field,
     $form['tardisrender_update'] = array(
       '#type' => 'hidden',
       '#value' => $tardisrender_view_mode,
+    );
+  }
+
+  // If TARDIS Token module is enabled, store any tokenized titles as an array.
+  if (module_exists('tardistoken')) {
+    $form['tardistoken_update'] = array(
+      '#type' => 'hidden',
+      '#value' => $tardistoken_titles,
     );
   }
 }

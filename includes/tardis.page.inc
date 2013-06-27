@@ -30,7 +30,8 @@ function tardis_page($tardis_page_name) {
   $node_types = unserialize($tardis_page->node_types);
 
   // Fetch fields used by submodules in the query.
-  _tardis_submodule_fields($tardis_page, $tardisdate_field, $tardisi18n_lang);
+  $tardistoken_page_titles = array();
+  _tardis_submodule_fields($tardis_page, 'page', $tardisdate_field, $tardisi18n_lang, $tardistoken_page_titles);
 
   // How did the user choose to append the current date to the page title?
   $tardis_page_title_date = $title_date;
@@ -46,27 +47,43 @@ function tardis_page($tardis_page_name) {
     // If we have a month, there's a distinction between
     // how months are displayed: numbers or names.
     if (count($tardis_query_arg) > 1) {
-      switch ($tardis_page_title_date) {
-        // Month names:
-        case 'years_month_names':
-          // Retrieve month names using this helper function.
-          $tardis_month_names = _tardis_month_names();
-          $tardis_month_number = $tardis_query_arg[1];
-          drupal_set_title($title . ": $tardis_month_names[$tardis_month_number], $tardis_query_arg[0]");
-          break;
-
-        // Month numbers:
-        case 'years_month_numbers':
-          drupal_set_title($title . ": $tardis_query_arg[1]/$tardis_query_arg[0]");
-          break;
+      // Is there a tokenized title for year and month arguments?
+      if (module_exists('tardistoken') && $tardistoken_page_titles['year_month'] != '') {
+        // Token replacement as defined in tardistoken_tokens().
+        // Here we set an array of options so that the callback
+        // can differentiate between a TARDIS page and block.
+        $tardis_options = array('object' => 'page');
+        $title = token_replace($tardistoken_page_titles['year_month'], $tardis_options);
+      }
+      else {
+        switch ($tardis_page_title_date) {
+          // Month names:
+          case 'years_month_names':
+            // Retrieve month names using this helper function.
+            $tardis_month_names = _tardis_month_names();
+            $tardis_month_number = $tardis_query_arg[1];
+            $title .= ": $tardis_month_names[$tardis_month_number], $tardis_query_arg[0]";
+            break;
+          // Month numbers:
+          case 'years_month_numbers':
+            $title .= ": $tardis_query_arg[1]/$tardis_query_arg[0]";
+            break;
+        }
       }
     }
-
-    // If there's only a year, that distinction is not needed.
-    if (count($tardis_query_arg) == 1 && $tardis_query_arg[0] != '') {
-      drupal_set_title($title . ": $tardis_query_arg[0]");
+    elseif (count($tardis_query_arg) == 1 && $tardis_query_arg[0] != '') {
+      // Is there a tokenized title for a single year argument?
+      if (module_exists('tardistoken') && $tardistoken_page_titles['year'] != '') {
+        $tardis_options = array('object' => 'page');
+        $title = token_replace($tardistoken_page_titles['year'], $tardis_options);
+      }
+      else {
+        $title .= ": $tardis_query_arg[0]";
+      }
     }
   }
+  $title = filter_xss($title);
+  drupal_set_title($title);
 
   // Calls the page query function.
   $result = _tardis_query_page($nodes_per_page, $node_types, $tardisdate_field, $tardisi18n_lang);
@@ -90,7 +107,9 @@ function tardis_page($tardis_page_name) {
   $views = node_view_multiple($nodes, $tardisrender_view_mode);
 
   // Add those objects to the output and render them.
-  $output = '';
+  // Only default view modes allow the title to render properly;
+  // for "Full node", and custom view modes, title must be set manually.
+  $output = ($tardisrender_view_mode == 'teaser') ? '' : '<h1 id="page-title" class="title tardis-page-title">' . $title . '</h1>';
   foreach ($views as $view) {
     $output .= render($view);
   }

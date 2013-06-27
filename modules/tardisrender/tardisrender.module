@@ -4,7 +4,7 @@
  * @file
  * TARDIS Render module file.
  * 
- * Alters the TARDIS query, filtering it by view mode.
+ * Alters the TARDIS query, filtering it by View mode.
  */
 
 /**
