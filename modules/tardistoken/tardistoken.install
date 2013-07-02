@@ -10,19 +10,19 @@
  */
 function tardistoken_schema_alter(&$schema) {
   // Defines new token-based title fields for TARDIS blocks.
-  $schema['tardis_blocks']['fields']['tardistoken_year_text'] = array(
+  $schema['tardis_blocks']['fields']['tardistoken_year'] = array(
     'type' => 'varchar',
     'length' => 64,
     'default' => '',
     'description' => t('Token-enabled block text for years'),
   );
-  $schema['tardis_blocks']['fields']['tardistoken_month_text'] = array(
+  $schema['tardis_blocks']['fields']['tardistoken_month'] = array(
     'type' => 'varchar',
     'length' => 64,
     'default' => '',
     'description' => t('Token-enabled block text for months'),
   );
-  $schema['tardis_blocks']['fields']['tardistoken_year_month_text'] = array(
+  $schema['tardis_blocks']['fields']['tardistoken_year_month'] = array(
     'type' => 'varchar',
     'length' => 64,
     'default' => '',
@@ -30,13 +30,13 @@ function tardistoken_schema_alter(&$schema) {
   );
 
   // Defines new token-based title fields for TARDIS pages.
-  $schema['tardis_pages']['fields']['tardistoken_page_title_year'] = array(
+  $schema['tardis_pages']['fields']['tardistoken_year'] = array(
     'type' => 'varchar',
     'length' => 64,
     'default' => '',
     'description' => t("Token-enabled title for when there's only a year as argument."),
   );
-  $schema['tardis_pages']['fields']['tardistoken_page_title_year_month'] = array(
+  $schema['tardis_pages']['fields']['tardistoken_year_month'] = array(
     'type' => 'varchar',
     'length' => 64,
     'default' => '',
@@ -52,30 +52,30 @@ function tardistoken_install() {
   $schema_blocks = drupal_get_schema('tardis_blocks');
   db_add_field(
     'tardis_blocks',
-    'tardistoken_year_text',
-    $schema_blocks['fields']['tardistoken_year_text']
+    'tardistoken_year',
+    $schema_blocks['fields']['tardistoken_year']
   );
   db_add_field(
     'tardis_blocks',
-    'tardistoken_month_text',
-    $schema_blocks['fields']['tardistoken_month_text']
+    'tardistoken_month',
+    $schema_blocks['fields']['tardistoken_month']
   );
   db_add_field(
     'tardis_blocks',
-    'tardistoken_year_month_text',
-    $schema_blocks['fields']['tardistoken_year_month_text']
+    'tardistoken_year_month',
+    $schema_blocks['fields']['tardistoken_year_month']
   );
 
   $schema_pages = drupal_get_schema('tardis_pages');
   db_add_field(
     'tardis_pages',
-    'tardistoken_page_title_year',
-    $schema_pages['fields']['tardistoken_page_title_year']
+    'tardistoken_year',
+    $schema_pages['fields']['tardistoken_year']
   );
   db_add_field(
     'tardis_pages',
-    'tardistoken_page_title_year_month',
-    $schema_pages['fields']['tardistoken_page_title_year_month']
+    'tardistoken_year_month',
+    $schema_pages['fields']['tardistoken_year_month']
   );
 }
 
@@ -83,10 +83,10 @@ function tardistoken_install() {
  * Implements hook_uninstall().
  */
 function tardistoken_uninstall() {
-  db_drop_field('tardis_blocks', 'tardistoken_year_text');
-  db_drop_field('tardis_blocks', 'tardistoken_month_text');
-  db_drop_field('tardis_blocks', 'tardistoken_year_month_text');
+  db_drop_field('tardis_blocks', 'tardistoken_year');
+  db_drop_field('tardis_blocks', 'tardistoken_month');
+  db_drop_field('tardis_blocks', 'tardistoken_year_month');
 
-  db_drop_field('tardis_pages', 'tardistoken_page_title_year');
-  db_drop_field('tardis_pages', 'tardistoken_page_title_year_month');
+  db_drop_field('tardis_pages', 'tardistoken_year');
+  db_drop_field('tardis_pages', 'tardistoken_year_month');
 }

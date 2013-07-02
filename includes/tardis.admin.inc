@@ -42,7 +42,7 @@ function tardis_overview($form, &$form_state) {
     foreach ($tardis_elements as $tardis_element) {
       // We build each row using data extracted from the db.
       $tardis_element_name = $tardis_element->name;
-      $tardis_element_title = $tardis_element->title;
+      $tardis_element_title = filter_xss($tardis_element->title);
 
       // Node types are stored as an array and, therefore, require some
       // processing. They're in serialized form, which must be unserialized.
@@ -69,7 +69,7 @@ function tardis_overview($form, &$form_state) {
       );
 
       // Add extra table info when submodules are on.
-      _tardis_submodules_extra_info('block', &$tardis_elements_rows, &$tardis_elements_row, $tardis_element);
+      _tardis_submodules_extra_info('block', $tardis_elements_rows, $tardis_elements_row, $tardis_element);
 
     }
   }
@@ -131,13 +131,13 @@ function tardis_overview($form, &$form_state) {
           '#type' => 'ul',
           '#items' => array(
             '<strong>Regular title: </strong><br />' . filter_xss($tardis_element->title),
-            '<strong>Title with year: </strong><br />' . filter_xss($tardis_element->tardistoken_page_title_year),
-            '<strong>Title with month and year: </strong><br />' . filter_xss($tardis_element->tardistoken_page_title_year_month),
+            '<strong>Title with year: </strong><br />' . filter_xss($tardis_element->tardistoken_year),
+            '<strong>Title with month and year: </strong><br />' . filter_xss($tardis_element->tardistoken_year_month),
           ),
         );
       }
       else {
-        $tardis_element_title = $tardis_element->title;
+        $tardis_element_title = filter_xss($tardis_element->title);
       }
 
       // Node types are stored as an array and, therefore, require some
@@ -165,7 +165,7 @@ function tardis_overview($form, &$form_state) {
       );
 
       // Add extra table info when submodules are on.
-      _tardis_submodules_extra_info('page', &$tardis_elements_rows, &$tardis_elements_row, $tardis_element);
+      _tardis_submodules_extra_info('page', $tardis_elements_rows, $tardis_elements_row, $tardis_element);
 
     }
   }
@@ -382,7 +382,7 @@ function tardis_block_settings($form, &$form_state) {
   );
 
   // Pass update information on.
-  _tardis_submodules_update_info('block', &$form, $tardisdate_field, $tardisi18n_lang, '', $tardistoken_titles);
+  _tardis_submodules_update_info('block', $form, $tardisdate_field, $tardisi18n_lang, '', $tardistoken_titles);
 
   // Validate and submit functions.
   $form['#validate'][] = 'tardis_block_settings_validate';
@@ -403,13 +403,24 @@ function tardis_block_settings($form, &$form_state) {
 function tardis_block_settings_validate($form, &$form_state) {
   // Define the validation strings.
   $tardis_block_name = $form_state['values']['name'];
+  $tardis_block_title = $form_state['values']['title'];
   $tardis_block_stop_year = $form_state['values']['stop_year'];
   $tardis_block_past_months = $form_state['values']['past_months'];
 
   // The "Name" field should contain only lowercase letters, numbers
   // and underscores, and begin with a letter.
-  if (!preg_match('/^[a-z][a-z0-9_]+$/', $tardis_block_name)) {
+  if (!preg_match('/^[a-z0-9_]+$/', $tardis_block_name)) {
     form_set_error('name', t('Please use only lowercase letters, numbers and underscores _ for the TARDIS block name.'));
+  }
+
+  // The "Name" field should not contain more than 64 characters.
+  if (strlen($tardis_block_name) > 64) {
+    form_set_error('name', t("TARDIS block name mustn't contain more than 64 characters."));
+  }
+
+  // The "Title" field should not contain more than 64 characters.
+  if (strlen($tardis_block_title) > 64) {
+    form_set_error('title', t("TARDIS block title mustn't contain more than 64 characters."));
   }
 
   // The "Stop looking at the year" field should obviously be a year.
@@ -577,7 +588,7 @@ function tardis_page_settings($form, &$form_state) {
   );
 
   // Pass update information on.
-  _tardis_submodules_update_info('page', &$form, $tardisdate_field, $tardisi18n_lang, $tardisrender_view_mode, $tardistoken_titles);
+  _tardis_submodules_update_info('page', $form, $tardisdate_field, $tardisi18n_lang, $tardisrender_view_mode, $tardistoken_titles);
 
   // Here's a group to place the TARDIS submodules.
   // This group will be rendered as a vertical tab group.
@@ -604,8 +615,18 @@ function tardis_page_settings_validate($form, &$form_state) {
 
   // The "Name" field should contain only lowercase letters, numbers
   // and underscores, and begin with a letter.
-  if (!preg_match('/^[a-z][a-z0-9_]+$/', $tardis_page_name)) {
+  if (!preg_match('/^[a-z0-9_]+$/', $tardis_page_name)) {
     form_set_error('name', t('Please use only lowercase letters, numbers and underscores _ for the TARDIS page name.'));
+  }
+
+  // The "Name" field should not contain more than 64 characters.
+  if (strlen($tardis_page_name) > 64) {
+    form_set_error('name', t("TARDIS page name mustn't contain more than 64 characters."));
+  }
+
+  // The "Title" field should not contain more than 64 characters.
+  if (strlen($tardis_page_title) > 64) {
+    form_set_error('title', t("TARDIS page title mustn't contain more than 64 characters."));
   }
 
   // Did the page address or title change? If so, we need to rebuild the menu.
@@ -769,9 +790,9 @@ function _tardis_submodules_extra_info($tardis_element_type, &$tardis_elements_r
       '#theme' => 'item_list',
       '#type' => 'ul',
       '#items' => array(
-        '<strong>Title for year and month: </strong><br />' . filter_xss($tardis_element->tardistoken_year_month_text),
-        '<strong>Title for year: </strong><br />' . filter_xss($tardis_element->tardistoken_year_text),
-        '<strong>Title for month: </strong><br />' . filter_xss($tardis_element->tardistoken_month_text),
+        '<strong>Title for year and month: </strong><br />' . filter_xss($tardis_element->tardistoken_year_month),
+        '<strong>Title for year: </strong><br />' . filter_xss($tardis_element->tardistoken_year),
+        '<strong>Title for month: </strong><br />' . filter_xss($tardis_element->tardistoken_month),
       ),
     );
 
@@ -854,13 +875,14 @@ function _tardis_submodules_values($tardis_type, $query, &$tardisdate_field, &$t
     $tardistoken_titles = array();
     switch ($tardis_type) {
       case 'page':
-        $tardistoken_titles['page_title_year'] = ($query['tardistoken_page_title_year'] != '') ? $query['tardistoken_page_title_year'] : '';
-        $tardistoken_titles['page_title_year_month'] = ($query['tardistoken_page_title_year_month'] != '') ? $query['tardistoken_page_title_year_month'] : '';
+        $tardistoken_titles['year'] = ($query['tardistoken_year'] != '') ? $query['tardistoken_year'] : '';
+        $tardistoken_titles['year_month'] = ($query['tardistoken_year_month'] != '') ? $query['tardistoken_year_month'] : '';
         break;
+
       case 'block':
-        $tardistoken_titles['tardistoken_year_text'] = ($query['tardistoken_year_text'] != '') ? $query['tardistoken_year_text'] : '';
-        $tardistoken_titles['tardistoken_month_text'] = ($query['tardistoken_month_text'] != '') ? $query['tardistoken_month_text'] : '';
-        $tardistoken_titles['tardistoken_year_month_text'] = ($query['tardistoken_year_month_text'] != '') ? $query['tardistoken_year_month_text'] : '';
+        $tardistoken_titles['year'] = ($query['tardistoken_year'] != '') ? $query['tardistoken_year'] : '';
+        $tardistoken_titles['month'] = ($query['tardistoken_month'] != '') ? $query['tardistoken_month'] : '';
+        $tardistoken_titles['year_month'] = ($query['tardistoken_year_month'] != '') ? $query['tardistoken_year_month'] : '';
         break;
     }
   }
@@ -892,8 +914,8 @@ function _tardis_submodules_default_values($tardis_type, &$tardisdate_field, &$t
     $tardistoken_titles = array();
     switch ($tardis_type) {
       case 'page':
-        $tardistoken_titles['page_title_year'] = '';
-        $tardistoken_titles['page_title_year_month'] = '';
+        $tardistoken_titles['year'] = '';
+        $tardistoken_titles['year_month'] = '';
         break;
     }
   }

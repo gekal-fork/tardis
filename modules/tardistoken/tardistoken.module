@@ -71,24 +71,29 @@ function tardistoken_tokens($type, $tokens, array $data = array(), array $option
             $tardis_month = $tardis_month_names[$tardis_month_index];
             $replacements[$original] = $tardis_month;
             break;
+
           case 'month_short':
             $tardis_month_abbreviations = _tardis_month_abbreviations();
             $tardis_month_index = $data['month'];
             $tardis_month = $tardis_month_abbreviations[$tardis_month_index];
             $replacements[$original] = $tardis_month;
             break;
+
           case 'month_zeroes':
             $tardis_month = $data['month'];
             $replacements[$original] = $tardis_month;
             break;
+
           case 'month_no_zeroes':
             $tardis_month = $data['month'];
             $replacements[$original] = ($tardis_month[0] == 0) ? $tardis_month[1] : $tardis_month;
             break;
+
           case 'year_full':
             $tardis_year = $data['year'];
             $replacements[$original] = $tardis_year;
             break;
+
           case 'year_short':
             $tardis_year = $data['year'];
             $replacements[$original] = substr($tardis_year, 2);
@@ -104,19 +109,24 @@ function tardistoken_tokens($type, $tokens, array $data = array(), array $option
             $tardis_month_names = _tardis_month_names();
             $replacements[$original] = $tardis_month_names[$tardis_query_arg_month];
             break;
+
           case 'month_short':
             $tardis_month_abbreviations = _tardis_month_abbreviations();
             $replacements[$original] = $tardis_month_abbreviations[$tardis_query_arg_month];
             break;
+
           case 'month_zeroes':
             $replacements[$original] = $tardis_query_arg_month;
             break;
+
           case 'month_no_zeroes':
             $replacements[$original] = ($tardis_query_arg_month[0] == 0) ? $tardis_query_arg_month[1] : $tardis_query_arg_month;
             break;
+
           case 'year_full':
             $replacements[$original] = $tardis_query_arg[0];
             break;
+
           case 'year_short':
             $replacements[$original] = substr($tardis_query_arg[0], 2);
             break;
@@ -135,9 +145,9 @@ function tardistoken_tokens($type, $tokens, array $data = array(), array $option
  */
 function tardistoken_form_tardis_block_settings_alter(&$form, &$form_state, $form_id) {
   // Are there any year or month texts set using tokens?
-  $tardistoken_year_text = $form['tardistoken_update']['#value']['tardistoken_year_text'];
-  $tardistoken_month_text = $form['tardistoken_update']['#value']['tardistoken_month_text'];
-  $tardistoken_year_month_text = $form['tardistoken_update']['#value']['tardistoken_year_month_text'];
+  $tardistoken_year = $form['tardistoken_update']['#value']['year'];
+  $tardistoken_month = $form['tardistoken_update']['#value']['month'];
+  $tardistoken_year_month = $form['tardistoken_update']['#value']['year_month'];
 
   // TARDIS Token vertical tab.
   $form['tardis_modules_tardistoken'] = array(
@@ -154,27 +164,27 @@ function tardistoken_form_tardis_block_settings_alter(&$form, &$form_state, $for
   );
 
   // TARDIS Token text for when years are separated from months in block links.
-  $form['tardis_modules_tardistoken']['tardistoken_year_text'] = array(
+  $form['tardis_modules_tardistoken']['tardistoken_year'] = array(
     '#type' => 'textfield',
     '#title' => t('Token-enabled year text'),
     '#description' => t('Token text for when years are separated from months in block links.'),
-    '#default_value' => $tardistoken_year_text,
+    '#default_value' => $tardistoken_year,
   );
 
   // TARDIS Token text for when months are separated from years in block links.
-  $form['tardis_modules_tardistoken']['tardistoken_month_text'] = array(
+  $form['tardis_modules_tardistoken']['tardistoken_month'] = array(
     '#type' => 'textfield',
     '#title' => t('Token-enabled month text'),
     '#description' => t('Token text for when months are separated from years in block links.'),
-    '#default_value' => $tardistoken_month_text,
+    '#default_value' => $tardistoken_month,
   );
 
   // TARDIS Token text for when years and months are grouped in block links.
-  $form['tardis_modules_tardistoken']['tardistoken_year_month_text'] = array(
+  $form['tardis_modules_tardistoken']['tardistoken_year_month'] = array(
     '#type' => 'textfield',
     '#title' => t('Token-enabled year with month text'),
     '#description' => t('Token text for when years and months are grouped in block links.'),
-    '#default_value' => $tardistoken_year_month_text,
+    '#default_value' => $tardistoken_year_month,
   );
 
   // Token guidelines.
@@ -184,11 +194,38 @@ function tardistoken_form_tardis_block_settings_alter(&$form, &$form_state, $for
     <p>You can use any of the following tokens in your TARDIS' titles.</p>"),
   );
 
-  // Available tokens
+  // Available tokens:
   $form['tardis_modules_tardistoken']['token_tree'] = array(
     '#theme' => 'token_tree',
     '#token_types' => array(),
   );
+
+  // Validate function.
+  $form['#validate'][] = 'tardistoken_block_settings_validate';
+}
+
+/**
+ * Validates input for the TARDIS block settings.
+ */
+function tardistoken_block_settings_validate($form, &$form_state) {
+  $tardistoken_year = $form['tardis_modules_tardistoken']['tardistoken_year']['#value'];
+  $tardistoken_month = $form['tardis_modules_tardistoken']['tardistoken_month']['#value'];
+  $tardistoken_year_month = $form['tardis_modules_tardistoken']['tardistoken_year_month']['#value'];
+
+  // The "Year" field should not contain more than 64 characters.
+  if (strlen($tardistoken_year) > 64) {
+    form_set_error('tardistoken_year', t("TARDIS block year text mustn't contain more than 64 characters."));
+  }
+
+  // The "Month" field should not contain more than 64 characters.
+  if (strlen($tardistoken_month) > 64) {
+    form_set_error('tardistoken_month', t("TARDIS block month text mustn't contain more than 64 characters."));
+  }
+
+  // The "Year with month" field should not contain more than 64 characters.
+  if (strlen($tardistoken_year_month) > 64) {
+    form_set_error('tardistoken_year_month', t("TARDIS block year with month text mustn't contain more than 64 characters."));
+  }
 }
 
 /**
@@ -199,8 +236,8 @@ function tardistoken_form_tardis_block_settings_alter(&$form, &$form_state, $for
  */
 function tardistoken_form_tardis_page_settings_alter(&$form, &$form_state, $form_id) {
   // Are there any titles set using tokens?
-  $tardistoken_page_title_year = $form['tardistoken_update']['#value']['page_title_year'];
-  $tardistoken_page_title_year_month = $form['tardistoken_update']['#value']['page_title_year_month'];
+  $tardistoken_year = $form['tardistoken_update']['#value']['year'];
+  $tardistoken_year_month = $form['tardistoken_update']['#value']['year_month'];
 
   // TARDIS Token vertical tab.
   $form['tardis_modules_tardistoken'] = array(
@@ -217,19 +254,19 @@ function tardistoken_form_tardis_page_settings_alter(&$form, &$form_state, $form
   );
 
   // TARDIS Token page title for when there's only a year as argument.
-  $form['tardis_modules_tardistoken']['tardistoken_page_title_year'] = array(
+  $form['tardis_modules_tardistoken']['tardistoken_year'] = array(
     '#type' => 'textfield',
     '#title' => t('TARDIS page: year'),
     '#description' => t("This is the title for when there's only a year as argument."),
-    '#default_value' => $tardistoken_page_title_year,
+    '#default_value' => $tardistoken_year,
   );
 
   // TARDIS Token page title for when both year and month are supplied.
-  $form['tardis_modules_tardistoken']['tardistoken_page_title_year_month'] = array(
+  $form['tardis_modules_tardistoken']['tardistoken_year_month'] = array(
     '#type' => 'textfield',
     '#title' => t('TARDIS page: year and month'),
     '#description' => t('This is the title for when both year and month are supplied.'),
-    '#default_value' => $tardistoken_page_title_year_month,
+    '#default_value' => $tardistoken_year_month,
   );
 
   // Token guidelines.
@@ -239,9 +276,31 @@ function tardistoken_form_tardis_page_settings_alter(&$form, &$form_state, $form
     <p>You can use any of the following tokens in your TARDIS' titles.</p>"),
   );
 
-  // Available tokens
+  // Available tokens:
   $form['tardis_modules_tardistoken']['token_tree'] = array(
     '#theme' => 'token_tree',
     '#token_types' => array(),
   );
+
+  // Validate function.
+  $form['#validate'][] = 'tardistoken_page_settings_validate';
 }
+
+/**
+ * Validates input for the TARDIS page settings.
+ */
+function tardistoken_page_settings_validate($form, &$form_state) {
+  $tardistoken_year = $form['tardis_modules_tardistoken']['tardistoken_year']['#value'];
+  $tardistoken_year_month = $form['tardis_modules_tardistoken']['tardistoken_year_month']['#value'];
+
+  // The "Year" field should not contain more than 64 characters.
+  if (strlen($tardistoken_year) > 64) {
+    form_set_error('tardistoken_year', t("TARDIS page year text mustn't contain more than 64 characters."));
+  }
+
+  // The "Year with month" field should not contain more than 64 characters.
+  if (strlen($tardistoken_year_month) > 64) {
+    form_set_error('tardistoken_year_month', t("TARDIS page year with month text mustn't contain more than 64 characters."));
+  }
+}
+

@@ -15,6 +15,7 @@ group.
 block you created (or create a new one).
 
 3. Scroll to the bottom and look for the "TARDIS Token" vertical tab. In there,
-change titles for each scenario accordingly.
+change titles for each scenario accordingly. Please note: anything you don't
+name will rever to default settings.
 
 4. Save and profit!

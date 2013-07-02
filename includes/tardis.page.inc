@@ -64,6 +64,7 @@ function tardis_page($tardis_page_name) {
             $tardis_month_number = $tardis_query_arg[1];
             $title .= ": $tardis_month_names[$tardis_month_number], $tardis_query_arg[0]";
             break;
+
           // Month numbers:
           case 'years_month_numbers':
             $title .= ": $tardis_query_arg[1]/$tardis_query_arg[0]";
@@ -107,9 +108,7 @@ function tardis_page($tardis_page_name) {
   $views = node_view_multiple($nodes, $tardisrender_view_mode);
 
   // Add those objects to the output and render them.
-  // Only default view modes allow the title to render properly;
-  // for "Full node", and custom view modes, title must be set manually.
-  $output = ($tardisrender_view_mode == 'teaser') ? '' : '<h1 id="page-title" class="title tardis-page-title">' . $title . '</h1>';
+  $output = '';
   foreach ($views as $view) {
     $output .= render($view);
   }
