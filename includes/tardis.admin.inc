@@ -11,8 +11,6 @@
  * Main page for the TARDIS admin section.
  *
  * Displays an overview of available TARDIS blocks and pages.
- *
- * TODO: submodule hooks.
  */
 function tardis_overview($form, &$form_state) {
   // Here we build a table of available TARDIS blocks.
@@ -438,7 +436,6 @@ function tardis_block_settings_validate($form, &$form_state) {
  * System settings form for TARDIS pages of recent nodes.
  *
  * Works for both creating and uptating.
- * TODO: submodule integrations.
  */
 function tardis_page_settings($form, &$form_state) {
   // Due to a limitation in the way the menu system works,

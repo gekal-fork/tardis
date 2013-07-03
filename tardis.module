@@ -338,7 +338,6 @@ function tardis_block_view($delta = '') {
  *
  * @return array
  *   A renderable array of links to archive pages.
- * TODO: submodules integration
  */
 function _tardis_query_block($past_months, $node_types, $stop_year, $current_month, $block_link, $year_link, $month_link, $tardisdate_field, $tardisi18n_lang, $tardistoken_titles) {
   // The $list array will hold all of our content.

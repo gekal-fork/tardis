@@ -72,10 +72,10 @@ function _tardisdate_join_query($query, $tardisdate_field) {
         'entity_id',
         'bundle',
         $tardisdate_field_value,
-      ))
-      ->orderBy($tardisdate_field_value, 'DESC');
+      ));
 
     $query->join($subquery, 'd', 'n.nid = d.entity_id');
+    $query->orderBy($tardisdate_field_value, 'DESC');
   }
   else {
     $query->orderBy('created', 'DESC');
