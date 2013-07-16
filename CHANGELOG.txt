@@ -1,6 +1,18 @@
 TARDIS: Changelog
 =================
 
+7.x-2.2, 2013-07-16
+-------------------
+TARDIS' latest release for branch 7.x-2.x adds the TARDIS Token submodule, for
+customizing TARDIS page titles and link texts. There's also some documentation
+fixes and minor code cleanup.
+
+7.x-2.1, 2013-05-23
+-------------------
+It has come to my attention that the last update didn't include the latest code,
+even though the dev version did. Oh well. Here it is, then.
+Sorry about that: I'm still learning the ropes.
+
 7.x-2.0, 2013-05-21
 -------------------
 TARDIS' first stable release for branch 7.x-2.x adds the TARDIS Render
