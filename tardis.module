@@ -320,7 +320,7 @@ function tardis_block_view($delta = '') {
         // Regardless of how settings look,
         // attributes, items and theme stay the same.
         $block['content']['#attributes'] = array(
-          'classes' => array('tardis', 'tardis-list'),
+          'class' => array('tardis', 'tardis-list'),
           'id' => 'tardis-accordion',
         );
         $block['content']['#items'] = $content;
