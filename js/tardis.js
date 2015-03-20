@@ -11,14 +11,14 @@
       year = settings.tardis.year;
       $("#tardis-accordion .tardis-link-year>*>a", context)
         .attr("href", "javascript:void(0);");
-      $("#tardis-accordion .tardis-year-" + year + ">.item-list", context)
+      $("#tardis-accordion .tardis-year-" + year + " .tardis-link-year", context)
         .addClass("active");
-      $("#tardis-accordion *>.item-list:not(.active)", context).hide();
+      $("#tardis-accordion * .tardis-link-year:not(.active)", context).hide();
       $("#tardis-accordion .tardis-link-year", context).click(function () {
         var $this = $(this);
-        $this.siblings().children(".item-list").hide();
-        $this.children(".item-list").addClass("active");
-        $this.children(".item-list.active").show();
+        $this.siblings().find(".tardis-link-year").hide();
+        $this.find(".tardis-link-year").addClass("active");
+        $this.find(".tardis-link-year.active").show();
       });
     }
   };
