@@ -1,0 +1,6 @@
+name = TARDIS Views
+description = TARDIS display plugin for Views.
+core = 7.x
+package = TARDIS
+files[] = tardisviews.views.inc
+files[] = views/plugins/tardisviews_plugin_style_monthlist.inc
