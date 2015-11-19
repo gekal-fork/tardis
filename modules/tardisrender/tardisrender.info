@@ -1,5 +1,0 @@
-name = TARDIS Render
-description = Extends TARDIS filtering to include custom view modes.
-core = 7.x
-package = TARDIS
-dependencies[] = tardis

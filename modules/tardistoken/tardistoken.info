@@ -1,6 +1,0 @@
-name = TARDIS Token
-description = Enables tokens for TARDIS block links and page titles.
-core = 7.x
-package = TARDIS
-dependencies[] = tardis
-dependencies[] = token

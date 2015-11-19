@@ -1,5 +1,0 @@
-name = TARDIS
-description = Easily display recent nodes organised by year and month.
-core = 7.x
-package = TARDIS
-configure = admin/structure/tardis
