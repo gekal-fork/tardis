@@ -7,7 +7,6 @@
 
 namespace Drupal\tardis\Plugin\views\style;
 
-use Drupal\Core\Datetime\Element\Datetime;
 use Drupal\core\form\FormStateInterface;
 use Drupal\views\Plugin\views\style\StylePluginBase;
 
@@ -21,12 +20,11 @@ use Drupal\views\Plugin\views\style\StylePluginBase;
  *   id = "tardis",
  *   title = @Translation("TARDIS"),
  *   help = @Translation("Render a list of years and months in reverse chronological order linked to content."),
+ *   theme = "views_view_tardis",
  *   display_types = { "normal" }
  * )
  *
- *
  */
-
 class Tardis extends StylePluginBase {
   /**
    * Set default options
@@ -42,46 +40,70 @@ class Tardis extends StylePluginBase {
    */
   public function buildOptionsForm(&$form, FormStateInterface $form_state) {
     parent::buildOptionsForm($form, $form_state);
+
+    // Path prefix for TARDIS links.
     $form['path'] = array(
       '#type' => 'textfield',
       '#title' => t('Link path'),
       '#default_value' => (isset($this->options['path'])) ? $this->options['path'] : 'tardis',
-      '#description' => t('Path prefix for each TARDIS link, eg. example.com<strong>/tardis/</strong>2015/10'),
+      '#description' => t('Path prefix for each TARDIS link, eg. example.com<strong>/tardis/</strong>2015/10.'),
     );
-  }
 
-  // Renders a simple view with chronological links to content
-  // in the form of an indented list of years and months
-  function render($display_id = NULL) {
-    $path = (isset($this->options['path'])) ? $this->options['path'] : 'tardis';
+    // Month date format.
+    $form['month_date_format'] = array(
+      '#type' => 'textfield',
+      '#title' => t('Month date format'),
+      '#default_value' => (isset($this->options['month_date_format'])) ? $this->options['month_date_format'] : 'm',
+      '#description' => t('Valid PHP <a href="@url" target="_blank">Date function</a> parameter to display months.', array('@url' => 'http://php.net/manual/en/function.date.php')),
+    );
 
-    $output = '<ul>';
+    // Whether month links should be nested inside year links.
+    $options = array(
+      1 => 'yes',
+      0 => 'no',
+    );
+    $form['nesting'] = array(
+      '#type' => 'radios',
+      '#title' => t('Nesting'),
+      '#options' => $options,
+      '#default_value' => (isset($this->options['nesting'])) ? $this->options['nesting'] : 1,
+      '#description' => t('Should months be nested inside years? <br />
+        Example:
+        <table style="width:100px">
+          <thead>
+              <th>Nesting</th>
+              <th>No nesting</th>
+          </thead>
+          <tbody>
+            <td>
+              <ul>
+                <li>2016
+                  <ul>
+                    <li>03</li>
+                    <li>02</li>
+                    <li>01</li>
+                  </ul>
+                </li>
+              </ul>
+            </td>
+            <td>
+              <ul>
+                <li>2016/03</li>
+                <li>2016/02</li>
+                <li>2016/01</li>
+              </ul>
+            </td>
+          </tbody>
+        </table>
+      '),
+    );
 
-    $time_pool = array();
-    foreach ($this->view->result as $id => $result) {
-      $created = $result->node_field_data_created;
-      $created_year = date('Y', $created);
-      $created_month = date('m', $created);
-      $time_pool[$created_year][0] = t("<a href='/$path/@year'>" . "@year" . "</a>", array('@year' => $created_year));
-      $time_pool[$created_year][$created_month] = t("<a href='/$path/@year/@month'>" . "@year/@month" . "</a>", array('@year' => $created_year, '@month' => $created_month));
-/*
-      kint($created_year);
-      // Todo: theme function here
-*/
-    }
-
-    foreach ($time_pool as $key => $value) {
-      foreach ($value as $subkey => $subvalue) {
-        if ($subkey == 0) {
-          $output .= "<li>$subvalue<ul>";
-        }
-        else {
-          $output .= "<li>$subvalue</li>";
-        }
-      }
-      $output .= "</ul></li>";
-    }
-    $output .= '<ul>';
-    return $output;
+    // Extra CSS classes.
+    $form['classes'] = array(
+      '#type' => 'textfield',
+      '#title' => t('CSS classes'),
+      '#default_value' => (isset($this->options['classes'])) ? $this->options['classes'] : 'view-tardis',
+      '#description' => t('CSS classes for further customization of this TARDIS page.'),
+    );
   }
 }
